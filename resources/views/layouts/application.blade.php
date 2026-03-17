@@ -43,8 +43,8 @@
     <header class="bg-[#f7f7f7]/90 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative h-16 flex items-center justify-between">
             <div class="flex items-center gap-4">
-                <button type="button" onclick="saveAndExit()"
-                    class="group relative flex items-center justify-center px-4 py-2 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer border border-transparent hover:border-white/50">
+                <button type="button" onclick="navigateTo('dashboard')"
+                    class="group relative flex items-center justify-center px-4 py-2 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer border border-transparent hover:border-white/50 bg-transparent">
                     <div class="absolute inset-0 topo-bg opacity-30 transition-opacity duration-300"></div>
                     <div
                         class="absolute inset-0 bg-white/60 backdrop-blur-[2px] group-hover:backdrop-blur-[4px] transition-all duration-300">
@@ -61,161 +61,255 @@
                 <span class="font-bold text-gray-900">Nová přihláška</span>
             </div>
 
-            <div class="text-xs text-gray-400 font-mono">
-                ID: {{ $application->application_number ?? $application->id }}
+            <div class="flex items-center gap-3">
+                @if (config('app.env') !== 'production')
+                    <a href="{{ route('nia.mock.login', $application->id) }}"
+                        class="group relative flex items-center justify-center px-3 py-1.5 rounded-lg overflow-hidden border border-dashed border-amber-400 bg-amber-50 hover:bg-amber-100 transition-all duration-200 cursor-pointer">
+                        <span class="text-amber-700 font-bold text-xs flex items-center gap-1.5">
+                            <span class="material-symbols-rounded text-[15px]">science</span>
+                            Simulovat NIA
+                        </span>
+                    </a>
+                @endif
+
+                <div id="autosave-indicator" class="text-xs text-gray-400 font-mono transition-all duration-300">
+                    ID: {{ $application->application_number ?? $application->id }}
+                </div>
             </div>
         </div>
     </header>
 
     <main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
 
-        @php
-            $currentStep = match (true) {
-                Request::routeIs('application.step1') => 1,
-                Request::routeIs('application.step2') => 2,
-                Request::routeIs('application.step3') => 3,
-                Request::routeIs('application.step4') => 4,
-                default => 1,
-            };
-        @endphp
-
-        <div x-data="{
-            step1Complete: {{ $application->isStep1Complete() ? 'true' : 'false' }},
-            step2Complete: {{ $application->isStep2Complete() ? 'true' : 'false' }},
-            init() {
-                window.addEventListener('step-complete', e => {
-                    if (e.detail.step === 1) this.step1Complete = e.detail.complete;
-                    if (e.detail.step === 2) this.step2Complete = e.detail.complete;
-                });
-            }
-        }"
-            class="bg-white/80 backdrop-blur-xl rounded-2xl shadow-sm border border-white/60 p-4 mb-10 ring-1 ring-black/5">
-            <div class="flex flex-wrap items-center justify-center gap-2 sm:gap-6 text-sm font-medium">
-
-                @php $s1Active = ($currentStep === 1); @endphp
-                <button type="button" onclick="navNavigate('{{ route('application.step1', $application->id) }}')"
-                    class="flex items-center gap-3 px-4 py-2 rounded-xl transition-colors cursor-pointer border-none bg-transparent
-                        {{ $s1Active ? 'bg-red-50 text-school-primary' : 'text-gray-600 hover:bg-gray-100' }}">
-                    <span
-                        class="h-8 w-8 rounded-full flex items-center justify-center border-2 text-sm font-bold
-                        {{ $s1Active ? 'border-school-primary bg-white' : 'border-gray-300' }}">1</span>
-                    <span>Osobní údaje</span>
-                </button>
-
-                <div class="hidden sm:block w-12 h-px bg-gray-200"></div>
-
-                @php $s2Active = ($currentStep === 2); @endphp
-                <button type="button"
-                    @if ($currentStep > 2) onclick="navNavigate('{{ route('application.step2', $application->id) }}')"
-                    @else
-                        @click="step1Complete && navNavigate('{{ route('application.step2', $application->id) }}')"
-                        :disabled="!step1Complete" @endif
-                    :class="{{ $currentStep > 2 ? 'true' : 'step1Complete' }}
-                        ?
-                        'text-gray-600 hover:bg-gray-100 cursor-pointer' :
-                        'text-gray-300 cursor-not-allowed opacity-50'"
-                    class="flex items-center gap-3 px-4 py-2 rounded-xl transition-colors border-none bg-transparent
-                        {{ $s2Active ? 'bg-red-50 text-school-primary' : '' }}">
-                    <span
-                        class="h-8 w-8 rounded-full flex items-center justify-center border-2 text-sm font-bold
-                        {{ $s2Active ? 'border-school-primary bg-white' : 'border-gray-200' }}">2</span>
-                    <span>Předchozí vzdělání</span>
-                </button>
-
-                <div class="hidden sm:block w-12 h-px bg-gray-200"></div>
-
-                @php $s3Active = ($currentStep === 3); @endphp
-                <button type="button"
-                    @if ($currentStep > 3) onclick="navNavigate('{{ route('application.step3', $application->id) }}')"
-                    @else
-                        @click="(step1Complete && step2Complete) && navNavigate('{{ route('application.step3', $application->id) }}')"
-                        :disabled="!step1Complete || !step2Complete" @endif
-                    :class="{{ $currentStep > 3 ? 'true' : '(step1Complete && step2Complete)' }}
-                        ?
-                        'text-gray-600 hover:bg-gray-100 cursor-pointer' :
-                        'text-gray-300 cursor-not-allowed opacity-50'"
-                    class="flex items-center gap-3 px-4 py-2 rounded-xl transition-colors border-none bg-transparent
-                        {{ $s3Active ? 'bg-red-50 text-school-primary' : '' }}">
-                    <span
-                        class="h-8 w-8 rounded-full flex items-center justify-center border-2 text-sm font-bold
-                        {{ $s3Active ? 'border-school-primary bg-white' : 'border-gray-200' }}">3</span>
-                    <span>Přílohy</span>
-                </button>
-
-                <div class="hidden sm:block w-12 h-px bg-gray-200"></div>
-
-                @php $s4Active = ($currentStep === 4); @endphp
-                <button type="button"
-                    @click="(step1Complete && step2Complete) && navNavigate('{{ route('application.step4', $application->id) }}')"
-                    :disabled="!step1Complete || !step2Complete"
-                    :class="(step1Complete && step2Complete) ?
-                    'text-gray-600 hover:bg-gray-100 cursor-pointer' :
-                    'text-gray-300 cursor-not-allowed opacity-50'"
-                    class="flex items-center gap-3 px-4 py-2 rounded-xl transition-colors border-none bg-transparent
-                        {{ $s4Active ? 'bg-red-50 text-school-primary' : '' }}">
-                    <span
-                        class="h-8 w-8 rounded-full flex items-center justify-center border-2 text-sm font-bold
-                        {{ $s4Active ? 'border-school-primary bg-white' : 'border-gray-200' }}">4</span>
-                    <span>Souhrn</span>
-                </button>
-
-            </div>
-        </div>
+        <x-step-nav :application="$application" :current="$currentStep" />
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+
             <div class="lg:col-span-2 space-y-6">
                 @yield('form-content')
             </div>
 
-            <div
-                class="bg-white/80 backdrop-blur-xl rounded-2xl shadow-sm border border-white/60 p-6 sticky top-24 ring-1 ring-black/5">
-                <div class="flex items-center gap-3 mb-6 border-b border-gray-100 pb-4">
-                    <img src="https://www.oauh.cz/content/filters/l2.png" alt="Logo" class="h-8 w-auto">
-                    <span class="text-sm font-bold text-gray-900 leading-tight">Obchodní akademie<br>Uherské
-                        Hradiště</span>
-                </div>
+            <div class="space-y-6 sticky top-24">
 
-                <h3 class="text-lg font-bold text-school-primary mb-1">
-                    {{ $application->studyProgram->name ?? 'Studijní program' }}
-                </h3>
-                <p class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-6">
-                    Vybraný studijní program
-                </p>
+                <div
+                    class="bg-white/80 backdrop-blur-xl rounded-2xl shadow-sm border border-white/60 p-6 ring-1 ring-black/5">
+                    <div class="flex items-center gap-3 mb-6 border-b border-gray-100 pb-4">
+                        <img src="https://www.oauh.cz/content/filters/l2.png" alt="Logo" class="h-8 w-auto">
+                        <span class="text-sm font-bold text-gray-900 leading-tight">Obchodní akademie<br>Uherské
+                            Hradiště</span>
+                    </div>
 
-                <div class="space-y-4 text-sm">
-                    <div class="flex justify-between">
-                        <span class="text-gray-500">Akademický rok</span>
-                        <span class="font-semibold text-gray-900">{{ date('Y') }}/{{ date('Y') + 1 }}</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-500">Jazyk výuky</span>
-                        <span
-                            class="font-semibold text-gray-900">{{ $application->studyProgram->language ?? 'Čeština' }}</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-500">Forma studia</span>
-                        <span
-                            class="font-semibold text-gray-900">{{ $application->studyProgram->form ?? 'Prezenční' }}</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-500">Školné</span>
-                        <span
-                            class="font-semibold text-gray-900">{{ $application->studyProgram->tuition_fee ?? '-' }}</span>
+                    <h3 class="text-lg font-bold text-school-primary mb-1">
+                        {{ $application->studyProgram->name ?? 'Studijní program' }}
+                    </h3>
+                    <p class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-6">Vybraný studijní program</p>
+
+                    <div class="space-y-4 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">Akademický rok</span>
+                            <span class="font-semibold text-gray-900">{{ date('Y') }}/{{ date('Y') + 1 }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">Forma studia</span>
+                            <span
+                                class="font-semibold text-gray-900">{{ $application->studyProgram->form ?? 'Prezenční' }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">Školné</span>
+                            <span
+                                class="font-semibold text-gray-900">{{ $application->studyProgram->tuition_fee ?? '-' }}</span>
+                        </div>
                     </div>
                 </div>
 
-                <div class="mt-8 pt-6 border-t border-gray-100">
-                    <h4 class="font-bold text-gray-800 text-sm mb-2">Nevíte si s něčím rady?</h4>
-                    <a href="mailto:info@oauh.cz"
-                        class="text-school-primary text-sm hover:underline block">info@oauh.cz</a>
-                    <a href="tel:+420572433012" class="text-school-primary text-sm hover:underline block">+420 572 433
-                        012</a>
+                @php
+                    $s1 = $application->step1Status();
+                    $s2 = $application->step2Status();
+                    $ps = $application->paymentStatus();
+
+                    $statusIcon = [
+                        'complete' => ['icon' => 'check_circle', 'cls' => 'text-green-500'],
+                        'incomplete' => ['icon' => 'error', 'cls' => 'text-orange-500'],
+                        'locked' => ['icon' => 'lock', 'cls' => 'text-gray-400'],
+                        'pending' => ['icon' => 'pending', 'cls' => 'text-blue-400'],
+                        'hidden' => ['icon' => 'radio_button_unchecked', 'cls' => 'text-gray-300'],
+                    ];
+                    $labelCls = [
+                        'complete' => 'text-gray-900',
+                        'incomplete' => 'text-gray-500',
+                        'locked' => 'text-gray-400',
+                        'pending' => 'text-gray-700',
+                        'hidden' => 'text-gray-300',
+                    ];
+
+                    $step1Locked = $application->isStep1Locked();
+                    $niaStatus = $step1Locked
+                        ? 'locked'
+                        : ($application->identity_verified
+                            ? 'complete'
+                            : 'incomplete');
+                    $gdprStatus = $step1Locked ? 'locked' : ($application->gdpr_accepted ? 'complete' : 'incomplete');
+                    $submittedStatus = $application->submitted ? 'complete' : 'incomplete';
+
+                    $deadline1 = $application->deadline_at ?? \Carbon\Carbon::parse('2026-03-28');
+                    $deadline2 = $application->education_locked_at ?? \Carbon\Carbon::parse('2026-05-04');
+                    $fmtDate = fn($dt) => $dt->format('j. n. Y');
+                @endphp
+
+                <div
+                    class="bg-white/80 backdrop-blur-xl rounded-2xl shadow-sm border border-white/60 p-6 ring-1 ring-black/5">
+                    <h3 class="font-bold text-gray-900 mb-5 flex items-center gap-2">
+                        <span class="material-symbols-rounded text-gray-400 text-[20px]">rule</span>
+                        Stav přihlášky
+                    </h3>
+
+                    <p class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">
+                        do {{ $fmtDate($deadline1) }}
+                    </p>
+
+                    <ul class="space-y-2.5 text-sm font-medium">
+                        <li class="flex items-center gap-3">
+                            <span
+                                class="material-symbols-rounded {{ $statusIcon[$s1]['cls'] }} text-[20px] flex-shrink-0">{{ $statusIcon[$s1]['icon'] }}</span>
+                            <span class="{{ $labelCls[$s1] }}">Osobní údaje</span>
+                        </li>
+                        <li class="flex items-center gap-3 pl-7">
+                            <span
+                                class="material-symbols-rounded {{ $statusIcon[$niaStatus]['cls'] }} text-[18px] flex-shrink-0">{{ $statusIcon[$niaStatus]['icon'] }}</span>
+                            <span class="{{ $labelCls[$niaStatus] }} text-xs">Ověření identity</span>
+                        </li>
+                        <li class="flex items-center gap-3">
+                            <span
+                                class="material-symbols-rounded {{ $statusIcon[$gdprStatus]['cls'] }} text-[20px] flex-shrink-0">{{ $statusIcon[$gdprStatus]['icon'] }}</span>
+                            <span class="{{ $labelCls[$gdprStatus] }}">Souhlas s GDPR</span>
+                        </li>
+                    </ul>
+
+                    <div class="mt-3 pt-3 border-t border-gray-100 flex items-center gap-3">
+                        <span
+                            class="material-symbols-rounded {{ $statusIcon[$submittedStatus]['cls'] }} text-[20px] flex-shrink-0">{{ $statusIcon[$submittedStatus]['icon'] }}</span>
+                        <span
+                            class="{{ $application->submitted ? 'text-gray-900 font-bold' : 'text-gray-500' }} text-sm">
+                            Přihláška odeslána
+                        </span>
+                    </div>
+
+                    <div class="my-5 border-t border-dashed border-gray-200"></div>
+
+                    <p class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">
+                        do {{ $fmtDate($deadline2) }}
+                    </p>
+
+                    <ul class="space-y-2.5 text-sm font-medium">
+                        <li class="flex items-center gap-3">
+                            <span
+                                class="material-symbols-rounded {{ $statusIcon[$s2]['cls'] }} text-[20px] flex-shrink-0">{{ $statusIcon[$s2]['icon'] }}</span>
+                            <span class="{{ $labelCls[$s2] }}">Předchozí vzdělání</span>
+                        </li>
+                        @php $payStatus = $ps === 'hidden' ? 'hidden' : $ps; @endphp
+                        <li class="flex items-center gap-3">
+                            <span
+                                class="material-symbols-rounded {{ $statusIcon[$payStatus]['cls'] }} text-[20px] flex-shrink-0">{{ $statusIcon[$payStatus]['icon'] }}</span>
+                            <span class="{{ $labelCls[$payStatus] }}">Přihláška zaplacena</span>
+                        </li>
+                    </ul>
                 </div>
+
             </div>
-
         </div>
     </main>
 
+    <script>
+        const AUTOSAVE_URL = "{{ route('application.autosave', $application->id) }}";
+        const FILE_UPLOAD_URL = "{{ route('application.uploadAttachment', $application->id) }}";
+        const FILE_DELETE_URL =
+            "{{ route('application.deleteAttachment', ['id' => $application->id, 'attachmentId' => '__ID__']) }}";
+        const CSRF_TOKEN = "{{ csrf_token() }}";
+        const DASHBOARD_URL = "{{ route('dashboard') }}";
+
+        function navigateTo(destination) {
+            window.location.href = destination === 'dashboard' ? DASHBOARD_URL : destination;
+        }
+
+        function showAutosaveState(state, msg) {
+            const el = document.getElementById('autosave-indicator');
+            if (!el) return;
+            const states = {
+                saving: {
+                    text: 'Ukládám…',
+                    cls: 'text-gray-400'
+                },
+                saved: {
+                    text: 'Uloženo ✓',
+                    cls: 'text-green-600'
+                },
+                error: {
+                    text: msg || 'Chyba při ukládání',
+                    cls: 'text-red-500'
+                },
+                idle: {
+                    text: 'ID: {{ $application->application_number ?? $application->id }}',
+                    cls: 'text-gray-400'
+                },
+            };
+            const s = states[state] || states.idle;
+            el.textContent = s.text;
+            el.className = `text-xs font-mono transition-all duration-300 ${s.cls}`;
+            if (state === 'saved') setTimeout(() => showAutosaveState('idle'), 2000);
+        }
+
+        async function autosaveField(name, value) {
+            showAutosaveState('saving');
+            try {
+                const res = await fetch(AUTOSAVE_URL, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': CSRF_TOKEN,
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        field: name,
+                        value: value
+                    }),
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    showAutosaveState('error', data.error || 'Chyba při ukládání');
+                    window.dispatchEvent(new CustomEvent('autosave-error', {
+                        detail: {
+                            field: name,
+                            message: data.error || 'Neplatná hodnota.'
+                        }
+                    }));
+                } else {
+                    showAutosaveState('saved');
+                    window.dispatchEvent(new CustomEvent('autosave-ok', {
+                        detail: {
+                            field: name
+                        }
+                    }));
+                }
+            } catch {
+                showAutosaveState('error', 'Chyba při ukládání');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('[data-autosave]').forEach(el => {
+                const event = (el.tagName === 'SELECT') ? 'change' : 'blur';
+                el.addEventListener(event, () => {
+                    autosaveField(el.dataset.autosave, el.value);
+                });
+            });
+
+            document.querySelectorAll('[data-autosave-checkbox]').forEach(el => {
+                el.addEventListener('change', () => {
+                    autosaveField(el.dataset.autosaveCheckbox, el.checked ? '1' : '0');
+                });
+            });
+        });
+    </script>
 </body>
 
 </html>

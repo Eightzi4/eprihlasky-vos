@@ -14,8 +14,22 @@ return new class extends Migration
             $table->foreignId('study_program_id')->constrained('study_programs');
 
             $table->string('status')->default('draft');
+
+            $table->boolean('identity_verified')->default(false);
+            $table->boolean('prev_study_info')->default(false);
+            $table->boolean('paid')->default(false);
+            $table->boolean('gdpr_accepted')->default(false);
+            $table->boolean('submitted')->default(false);
+
+            $table->boolean('prev_study_info_accepted')->default(false);
+            $table->boolean('payment_accepted')->default(false);
+
             $table->string('application_number')->nullable();
             $table->timestamp('submitted_at')->nullable();
+
+            $table->timestamp('education_locked_at')->nullable();
+            $table->timestamp('payment_locked_at')->nullable();
+            $table->timestamp('deadline_at')->nullable();
 
             $table->string('first_name')->nullable();
             $table->string('last_name')->nullable();
@@ -24,10 +38,8 @@ return new class extends Migration
             $table->date('birth_date')->nullable();
             $table->string('birth_city')->nullable();
             $table->string('citizenship')->nullable();
-
             $table->string('email')->nullable();
             $table->string('phone')->nullable();
-
             $table->string('street')->nullable();
             $table->string('city')->nullable();
             $table->string('zip')->nullable();
