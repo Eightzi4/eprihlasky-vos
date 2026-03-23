@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Application;
+use App\Models\ApplicationRound;
 use App\Models\StudyProgram;
 use App\Models\ApplicationAttachment;
 use Illuminate\Http\Request;
@@ -79,26 +80,56 @@ class ApplicationController extends Controller
 
     public function programsIndex()
     {
-        $programs = StudyProgram::where('is_active', true)->get();
+        $programs = StudyProgram::where('is_active', true)
+            ->with(['applicationRounds' => fn($q) => $q->where('is_active', true)->orderBy('opens_at')])
+            ->get()
+            ->filter(fn($p) => $p->hasAnyRounds())
+            ->values();
         return view('programs.index', compact('programs'));
     }
 
-    public function create($program_id)
+    public function create(Request $request, $program_id)
     {
         $program = StudyProgram::findOrFail($program_id);
 
-        $existingApp = Application::where('user_id', Auth::id())
+        $round = ApplicationRound::where('study_program_id', $program_id)
+            ->open()
+            ->first();
+
+        if (! $round) {
+            return redirect()->route('programs.index')
+                ->with('error', 'Pro tento studijní program momentálně neprobíhá žádné přijímací kolo.');
+        }
+
+        if ($round->isFull()) {
+            return redirect()->route('programs.index')
+                ->with('error', 'Kapacita tohoto kola je již naplněna.');
+        }
+
+        $existingDraft = Application::where('user_id', Auth::id())
             ->where('study_program_id', $program_id)
             ->where('submitted', false)
             ->first();
 
-        if ($existingApp) {
-            return redirect()->route('application.step1', $existingApp->id);
+        if ($existingDraft) {
+            return redirect()->route('application.step1', $existingDraft->id);
+        }
+
+        $alreadyAppliedThisYear = Application::where('user_id', Auth::id())
+            ->where('study_program_id', $program_id)
+            ->where('submitted', true)
+            ->whereHas('round', fn($q) => $q->where('academic_year', $round->academic_year))
+            ->exists();
+
+        if ($alreadyAppliedThisYear) {
+            return redirect()->route('programs.index')
+                ->with('error', "Do tohoto programu jste v akademickém roce {$round->academic_year} již přihlášku podali.");
         }
 
         $app = Application::create([
             'user_id'          => Auth::id(),
             'study_program_id' => $program->id,
+            'round_id'         => $round->id,
             'status'           => 'draft',
             'email'            => Auth::user()->email,
         ]);

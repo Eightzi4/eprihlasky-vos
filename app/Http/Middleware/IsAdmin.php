@@ -11,10 +11,10 @@ class IsAdmin
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (Auth::check() && Auth::user()->role !== 'Uchazeč') {
+        if (Auth::guard('admin')->check()) {
             return $next($request);
         }
 
-        abort(403, 'Přístup odepřen.');
+        return redirect()->route('admin.login');
     }
 }

@@ -15,6 +15,7 @@
         @include('application.summary._section', [
             'title' => 'Osobní a kontaktní údaje',
             'editRoute' => $editBtn('step1'),
+            'locked' => false,
             'rows' => [
                 [
                     'label' => 'Jméno a příjmení',
@@ -47,11 +48,15 @@
                 ['label' => 'E-mail', 'value' => $application->email],
                 ['label' => 'Telefon', 'value' => $application->phone],
             ],
+            'file' => null,
+            'fileLabel' => null,
+            'otherFiles' => collect(),
         ])
 
         @include('application.summary._section', [
             'title' => 'Předchozí vzdělání',
             'editRoute' => $editBtn('step2'),
+            'locked' => $application->prev_study_info_accepted,
             'rows' => array_filter([
                 ['label' => 'Název střední školy', 'value' => $application->previous_school, 'span' => 2],
                 ['label' => 'IZO školy', 'value' => $application->izo, 'mono' => true],
@@ -71,21 +76,26 @@
             ]),
             'file' => $maturitaFile,
             'fileLabel' => 'Maturitní vysvědčení',
+            'otherFiles' => collect(),
         ])
 
         @include('application.summary._section', [
             'title' => 'Doplňující informace',
             'editRoute' => $editBtn('step3'),
+            'locked' => false,
             'rows' => [
                 ['label' => 'Specifické potřeby', 'value' => $application->specific_needs ?: 'Neuvedeno'],
                 ['label' => 'Poznámka', 'value' => $application->note ?: 'Bez poznámky'],
             ],
+            'file' => null,
+            'fileLabel' => null,
             'otherFiles' => $otherFiles,
         ])
 
         @include('application.summary._section', [
             'title' => 'Platba zápisného',
             'editRoute' => $editBtn('step4'),
+            'locked' => $application->payment_accepted,
             'rows' => [
                 [
                     'label' => 'Stav platby',
@@ -98,6 +108,7 @@
             ],
             'file' => $paymentFile,
             'fileLabel' => 'Potvrzení o platbě',
+            'otherFiles' => collect(),
         ])
 
         @if (!$application->submitted)

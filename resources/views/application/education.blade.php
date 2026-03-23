@@ -5,8 +5,8 @@
         $maturitaFile = $application->attachments->where('type', 'maturita')->first();
         $serverErrors = array_keys($errors->toArray());
         $serverMessages = collect($errors->toArray())->map(fn($msgs) => $msgs[0])->toArray();
-        $isLocked = $application->isStepLocked(2);
-        $isPending = $application->isStep2Complete() && !$application->prev_study_info_accepted;
+        $isLocked = $application->isStepLocked(2) || $application->prev_study_info_accepted;
+        $isPending = $application->isStep2Complete() && $maturitaFile && !$application->prev_study_info_accepted;
     @endphp
 
     <div x-data="stepValidator({

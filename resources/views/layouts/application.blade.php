@@ -42,7 +42,7 @@
 
     <header class="bg-[#f7f7f7]/90 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative h-16 flex items-center justify-between">
-            <div class="flex items-center gap-4">
+            <div class="flex items-center">
                 <button type="button" onclick="navigateTo('dashboard')"
                     class="group relative flex items-center justify-center px-4 py-2 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer border border-transparent hover:border-white/50 bg-transparent">
                     <div class="absolute inset-0 topo-bg opacity-30 transition-opacity duration-300"></div>
@@ -57,8 +57,6 @@
                         Uložit a odejít
                     </span>
                 </button>
-                <div class="h-6 w-px bg-gray-300"></div>
-                <span class="font-bold text-gray-900">Nová přihláška</span>
             </div>
 
             <div class="flex items-center gap-3">
@@ -81,6 +79,94 @@
 
     <main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
 
+        @php
+            $statusIcon = [
+                'complete' => ['icon' => 'check_circle', 'cls' => 'text-green-500'],
+                'incomplete' => ['icon' => 'error', 'cls' => 'text-orange-500'],
+                'locked' => ['icon' => 'lock', 'cls' => 'text-gray-400'],
+                'pending' => ['icon' => 'pending', 'cls' => 'text-blue-400'],
+            ];
+            $labelCls = [
+                'complete' => 'text-gray-900',
+                'incomplete' => 'text-gray-500',
+                'locked' => 'text-gray-400',
+                'pending' => 'text-gray-700',
+            ];
+            $s1 = $application->step1Status();
+            $s2 = $application->step2Status();
+            $ps = $application->paymentStatus();
+            $step1Locked = $application->isStep1Locked();
+            $niaStatus = $step1Locked ? 'locked' : ($application->identity_verified ? 'complete' : 'incomplete');
+            $gdprStatus = $step1Locked ? 'locked' : ($application->gdpr_accepted ? 'complete' : 'incomplete');
+            $submittedStatus = $application->submitted ? 'complete' : 'incomplete';
+            $deadline1 = $application->deadline_at ?? \Carbon\Carbon::parse('2026-03-28');
+            $deadline2 = $application->education_locked_at ?? \Carbon\Carbon::parse('2026-05-04');
+            $fmtDate = fn($dt) => $dt->format('j. n. Y');
+        @endphp
+
+        <div class="lg:hidden space-y-4 mb-6">
+            <div
+                class="bg-white/80 backdrop-blur-xl rounded-2xl shadow-sm border border-white/60 p-5 ring-1 ring-black/5">
+                <div class="flex items-center gap-3 mb-4 border-b border-gray-100 pb-4">
+                    <img src="https://www.oauh.cz/content/filters/l2.png" alt="Logo" class="h-7 w-auto">
+                    <span class="text-sm font-bold text-gray-900 leading-tight">Obchodní akademie<br>Uherské
+                        Hradiště</span>
+                </div>
+                <h3 class="text-base font-bold text-school-primary mb-0.5">
+                    {{ $application->studyProgram->name ?? 'Studijní program' }}
+                </h3>
+                <p class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-4">Vybraný studijní program</p>
+                <div class="grid grid-cols-3 gap-3 text-xs">
+                    <div>
+                        <p class="text-gray-400 mb-0.5">Akademický rok</p>
+                        <p class="font-semibold text-gray-900">{{ date('Y') }}/{{ date('Y') + 1 }}</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-400 mb-0.5">Forma studia</p>
+                        <p class="font-semibold text-gray-900">{{ $application->studyProgram->form ?? 'Prezenční' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-400 mb-0.5">Školné</p>
+                        <p class="font-semibold text-gray-900">{{ $application->studyProgram->tuition_fee ?? '-' }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div
+                class="bg-white/80 backdrop-blur-xl rounded-2xl shadow-sm border border-white/60 p-5 ring-1 ring-black/5">
+                <h3 class="font-bold text-gray-900 mb-4 flex items-center gap-2 text-sm">
+                    <span class="material-symbols-rounded text-gray-400 text-[18px]">rule</span>
+                    Stav přihlášky
+                </h3>
+
+                <p class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">do {{ $fmtDate($deadline1) }}
+                </p>
+                <div class="grid grid-cols-2 gap-x-6 gap-y-2 text-xs font-medium mb-3">
+                    @foreach ([[$s1, 'Osobní údaje', false], [$niaStatus, 'Ověření identity', true], [$gdprStatus, 'Souhlas s GDPR', false], [$submittedStatus, 'Přihláška odeslána', false]] as [$st, $lb, $indent])
+                        <div class="flex items-center gap-2 {{ $indent ? 'pl-5' : '' }}">
+                            <span
+                                class="material-symbols-rounded {{ $statusIcon[$st]['cls'] }} text-[16px] flex-shrink-0">{{ $statusIcon[$st]['icon'] }}</span>
+                            <span class="{{ $labelCls[$st] }}">{{ $lb }}</span>
+                        </div>
+                    @endforeach
+                </div>
+
+                <div class="border-t border-dashed border-gray-200 my-3"></div>
+
+                <p class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">do {{ $fmtDate($deadline2) }}
+                </p>
+                <div class="grid grid-cols-2 gap-x-6 gap-y-2 text-xs font-medium">
+                    @foreach ([[$s2, 'Předchozí vzdělání', false], [$ps, 'Přihláška zaplacena', false]] as [$st, $lb, $indent])
+                        <div class="flex items-center gap-2">
+                            <span
+                                class="material-symbols-rounded {{ $statusIcon[$st]['cls'] }} text-[16px] flex-shrink-0">{{ $statusIcon[$st]['icon'] }}</span>
+                            <span class="{{ $labelCls[$st] }}">{{ $lb }}</span>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+
         <x-step-nav :application="$application" :current="$currentStep" />
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
@@ -89,7 +175,7 @@
                 @yield('form-content')
             </div>
 
-            <div class="space-y-6 sticky top-24">
+            <div class="hidden lg:block space-y-6 sticky top-24">
 
                 <div
                     class="bg-white/80 backdrop-blur-xl rounded-2xl shadow-sm border border-white/60 p-6 ring-1 ring-black/5">
@@ -123,25 +209,6 @@
                 </div>
 
                 @php
-                    $s1 = $application->step1Status();
-                    $s2 = $application->step2Status();
-                    $ps = $application->paymentStatus();
-
-                    $statusIcon = [
-                        'complete' => ['icon' => 'check_circle', 'cls' => 'text-green-500'],
-                        'incomplete' => ['icon' => 'error', 'cls' => 'text-orange-500'],
-                        'locked' => ['icon' => 'lock', 'cls' => 'text-gray-400'],
-                        'pending' => ['icon' => 'pending', 'cls' => 'text-blue-400'],
-                        'hidden' => ['icon' => 'radio_button_unchecked', 'cls' => 'text-gray-300'],
-                    ];
-                    $labelCls = [
-                        'complete' => 'text-gray-900',
-                        'incomplete' => 'text-gray-500',
-                        'locked' => 'text-gray-400',
-                        'pending' => 'text-gray-700',
-                        'hidden' => 'text-gray-300',
-                    ];
-
                     $step1Locked = $application->isStep1Locked();
                     $niaStatus = $step1Locked
                         ? 'locked'
@@ -206,11 +273,10 @@
                                 class="material-symbols-rounded {{ $statusIcon[$s2]['cls'] }} text-[20px] flex-shrink-0">{{ $statusIcon[$s2]['icon'] }}</span>
                             <span class="{{ $labelCls[$s2] }}">Předchozí vzdělání</span>
                         </li>
-                        @php $payStatus = $ps === 'hidden' ? 'hidden' : $ps; @endphp
                         <li class="flex items-center gap-3">
                             <span
-                                class="material-symbols-rounded {{ $statusIcon[$payStatus]['cls'] }} text-[20px] flex-shrink-0">{{ $statusIcon[$payStatus]['icon'] }}</span>
-                            <span class="{{ $labelCls[$payStatus] }}">Přihláška zaplacena</span>
+                                class="material-symbols-rounded {{ $statusIcon[$ps]['cls'] }} text-[20px] flex-shrink-0">{{ $statusIcon[$ps]['icon'] }}</span>
+                            <span class="{{ $labelCls[$ps] }}">Přihláška zaplacena</span>
                         </li>
                     </ul>
                 </div>

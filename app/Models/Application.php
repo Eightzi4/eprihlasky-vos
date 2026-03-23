@@ -10,6 +10,7 @@ class Application extends Model
     protected $fillable = [
         'user_id',
         'study_program_id',
+        'round_id',
         'status',
         'identity_verified',
         'prev_study_info',
@@ -67,6 +68,11 @@ class Application extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function round()
+    {
+        return $this->belongsTo(ApplicationRound::class, 'round_id');
     }
 
     public function studyProgram()
@@ -181,7 +187,6 @@ class Application extends Model
 
     public function paymentStatus(): string
     {
-        if (! $this->submitted) return 'hidden';
         if ($this->isPaymentSectionLocked()) return 'locked';
         if ($this->paid && $this->payment_accepted) return 'complete';
         if ($this->paid) return 'pending';

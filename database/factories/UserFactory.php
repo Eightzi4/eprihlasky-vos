@@ -4,41 +4,159 @@ namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
-/**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\User>
- */
 class UserFactory extends Factory
 {
-    /**
-     * The current password being used by the factory.
-     */
-    protected static ?string $password;
+    protected $model = \App\Models\User::class;
 
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
+    private static array $femaleFirstNames = [
+        'Jana',
+        'Lucie',
+        'Petra',
+        'Tereza',
+        'Michaela',
+        'Veronika',
+        'Eliška',
+        'Klára',
+        'Martina',
+        'Monika',
+        'Alena',
+        'Lenka',
+        'Eva',
+        'Hana',
+        'Simona',
+        'Barbora',
+        'Renata',
+        'Markéta',
+        'Andrea',
+        'Kateřina',
+    ];
+
+    private static array $maleFirstNames = [
+        'Tomáš',
+        'Martin',
+        'Ondřej',
+        'Jakub',
+        'Radek',
+        'Michal',
+        'Jan',
+        'Petr',
+        'Lukáš',
+        'Pavel',
+        'Jiří',
+        'Marek',
+        'Vojtěch',
+        'David',
+        'Miroslav',
+        'Zdeněk',
+        'Stanislav',
+        'Roman',
+        'Karel',
+        'Filip',
+    ];
+
+    private static array $femaleLastNames = [
+        'Nováková',
+        'Svobodová',
+        'Horáková',
+        'Marková',
+        'Blažková',
+        'Čermáková',
+        'Pospíšilová',
+        'Veselá',
+        'Procházková',
+        'Dvořáková',
+        'Novotná',
+        'Kratochvílová',
+        'Mazánková',
+        'Šimánková',
+        'Blahnová',
+        'Kopečná',
+        'Navrátilová',
+        'Pokorná',
+    ];
+
+    private static array $maleLastNames = [
+        'Novák',
+        'Procházka',
+        'Dvořák',
+        'Krejčí',
+        'Beneš',
+        'Fiala',
+        'Šimánek',
+        'Navrátil',
+        'Pokorný',
+        'Blažek',
+        'Kratochvíl',
+        'Kopec',
+        'Mazánek',
+        'Veselý',
+        'Čermák',
+        'Pospíšil',
+        'Horák',
+        'Marek',
+        'Svoboda',
+    ];
+
+    private static array $cities = [
+        'Praha',
+        'Brno',
+        'Ostrava',
+        'Plzeň',
+        'Olomouc',
+        'Liberec',
+        'Hradec Králové',
+        'České Budějovice',
+        'Zlín',
+        'Pardubice',
+        'Jihlava',
+        'Kladno',
+        'Most',
+        'Teplice',
+        'Uherské Hradiště',
+        'Kroměříž',
+        'Znojmo',
+        'Hodonín',
+        'Přerov',
+    ];
+
     public function definition(): array
     {
+        $gender    = $this->faker->randomElement(['male', 'female']);
+        $firstName = $gender === 'female'
+            ? $this->faker->randomElement(self::$femaleFirstNames)
+            : $this->faker->randomElement(self::$maleFirstNames);
+        $lastName  = $gender === 'female'
+            ? $this->faker->randomElement(self::$femaleLastNames)
+            : $this->faker->randomElement(self::$maleLastNames);
+
+        $slug  = \Illuminate\Support\Str::ascii(strtolower("{$firstName}.{$lastName}"));
+        $email = "{$slug}@" . $this->faker->randomElement(['email.cz', 'gmail.com', 'seznam.cz', 'centrum.cz']);
+
         return [
-            'name' => fake()->name(),
-            'email' => fake()->unique()->safeEmail(),
-            'email_verified_at' => now(),
-            'password' => static::$password ??= Hash::make('password'),
-            'remember_token' => Str::random(10),
+            'name'     => "{$firstName} {$lastName}",
+            'email'    => $email,
+            'password' => Hash::make('heslo123'),
         ];
     }
 
-    /**
-     * Indicate that the model's email address should be unverified.
-     */
-    public function unverified(): static
+    public static function czechProfile(string $gender): array
     {
-        return $this->state(fn (array $attributes) => [
-            'email_verified_at' => null,
-        ]);
+        $faker = \Faker\Factory::create('cs_CZ');
+
+        if ($gender === 'female') {
+            $first = $faker->randomElement(self::$femaleFirstNames);
+            $last  = $faker->randomElement(self::$femaleLastNames);
+        } else {
+            $first = $faker->randomElement(self::$maleFirstNames);
+            $last  = $faker->randomElement(self::$maleLastNames);
+        }
+
+        $city  = $faker->randomElement(self::$cities);
+        $slug  = \Illuminate\Support\Str::ascii(strtolower("{$first}.{$last}"));
+        $email = "{$slug}" . $faker->numberBetween(1, 99) . "@"
+            . $faker->randomElement(['email.cz', 'gmail.com', 'seznam.cz']);
+
+        return compact('first', 'last', 'email', 'city', 'gender');
     }
 }

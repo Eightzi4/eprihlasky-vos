@@ -3,7 +3,7 @@
 @section('form-content')
     @php
         $paymentFile = $application->attachments->where('type', 'payment')->first();
-        $isLocked = $application->isPaymentSectionLocked();
+        $isLocked = $application->isPaymentSectionLocked() || $application->payment_accepted;
         $program = $application->studyProgram;
         $tuition = $program->tuition_fee ?? '—';
         $bankAccount = config('school.bank_account', '1234567890/0800');
@@ -15,7 +15,7 @@
             <span class="material-symbols-rounded text-green-500 text-[28px] flex-shrink-0">verified</span>
             <div>
                 <p class="font-bold text-green-900 text-sm">Platba byla přijata</p>
-                <p class="text-xs text-green-700 mt-0.5">Vaše platba byla ověřena školou. Přihláška je kompletní.</p>
+                <p class="text-xs text-green-700 mt-0.5">Vaše platba byla ověřena školou.</p>
             </div>
         </div>
     @elseif ($application->paid)
@@ -51,14 +51,6 @@
                 <span class="font-bold text-gray-900 font-mono">{{ $vs }}</span>
             </div>
         </div>
-
-        @if ($isLocked)
-            <div
-                class="flex items-center gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-200 text-sm text-gray-500 mb-4">
-                <span class="material-symbols-rounded text-gray-400 text-[20px]">lock</span>
-                Tato sekce je uzamčena a nelze ji upravovat.
-            </div>
-        @endif
 
         <x-file-uploader field-name="payment_file" :saved-files="$paymentFile ? [$paymentFile] : []" :locked="$isLocked" />
     </div>

@@ -1,0 +1,36 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('admins', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->string('email')->unique();
+            $table->string('password')->nullable();
+            $table->boolean('is_main_admin')->default(false);
+            $table->rememberToken();
+            $table->timestamps();
+        });
+
+        Schema::table('users', function (Blueprint $table) {
+            $table->dropColumn('role');
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('admins');
+
+        Schema::table('users', function (Blueprint $table) {
+            $table->enum('role', ['Uchazeč', 'Administrátor', 'Hlavní administrátor'])
+                ->default('Uchazeč')
+                ->after('password');
+        });
+    }
+};

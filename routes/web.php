@@ -41,6 +41,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/dashboard', function () {
         $applications = Application::where('user_id', Auth::id())
+            ->with(['studyProgram', 'round'])
             ->orderBy('created_at', 'desc')
             ->get();
         return view('dashboard', compact('applications'));
@@ -73,9 +74,26 @@ Route::middleware('auth')->group(function () {
     )->name('application.deleteAttachment');
 });
 
-Route::prefix('admin')->group(function () {
-    Route::get('/login',           [AdminController::class, 'showLogin'])->name('admin.login');
-    Route::post('/login',          [AdminController::class, 'login'])->name('admin.login.post');
-    Route::get('/dashboard',       [AdminController::class, 'dashboard'])->name('admin.dashboard');
-    Route::get('/application/{id}', [AdminController::class, 'showApplication'])->name('admin.application.show');
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::get('/login',            [AdminController::class, 'showLogin'])->name('login');
+    Route::post('/login',           [AdminController::class, 'handleEmail'])->name('login.post');
+    Route::post('/login/password',  [AdminController::class, 'loginWithPassword'])->name('login.password');
+    Route::post('/login/send-link', [AdminController::class, 'sendLink'])->name('login.send-link');
+    Route::get('/login/verify',     [AdminController::class, 'verifyTicket'])->name('login.verify');
+
+    Route::middleware(App\Http\Middleware\IsAdmin::class)->group(function () {
+        Route::post('/logout', [AdminController::class, 'logout'])->name('logout');
+
+        Route::get('/',              [AdminController::class, 'dashboard'])->name('dashboard');
+        Route::get('/applications',  [AdminController::class, 'applications'])->name('applications');
+        Route::get('/applications/{id}', [AdminController::class, 'showApplication'])->name('applications.show');
+
+        Route::patch('/applications/{id}/accept-payment',   [AdminController::class, 'acceptPayment'])->name('applications.acceptPayment');
+        Route::patch('/applications/{id}/revert-payment',   [AdminController::class, 'revertPayment'])->name('applications.revertPayment');
+        Route::patch('/applications/{id}/accept-education', [AdminController::class, 'acceptEducation'])->name('applications.acceptEducation');
+        Route::patch('/applications/{id}/revert-education', [AdminController::class, 'revertEducation'])->name('applications.revertEducation');
+
+        Route::patch('/account/email',    [AdminController::class, 'updateEmail'])->name('account.email');
+        Route::patch('/account/password', [AdminController::class, 'updatePassword'])->name('account.password');
+    });
 });

@@ -60,22 +60,10 @@ return new class extends Migration
 
             $table->timestamps();
         });
-
-        Schema::create('application_attachments', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('application_id')->constrained('applications')->cascadeOnDelete();
-            $table->string('type');
-            $table->string('filename');
-            $table->string('disk_path');
-            $table->string('mime_type')->nullable();
-            $table->integer('size')->nullable();
-            $table->timestamps();
-        });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('application_attachments');
         Schema::dropIfExists('applications');
     }
 };

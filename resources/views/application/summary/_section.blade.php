@@ -2,25 +2,34 @@
     $file = $file ?? null;
     $fileLabel = $fileLabel ?? null;
     $otherFiles = $otherFiles ?? collect();
+    $locked = $locked ?? false;
 @endphp
 
 <div
     class="bg-white/80 backdrop-blur-xl rounded-3xl shadow-sm border border-white/60 p-6 sm:p-8 ring-1 ring-black/5 mb-6">
-    <div class="flex justify-between items-center mb-6 pb-4 border-b border-gray-100">
-        <h2 class="text-xl font-bold text-gray-900">{{ $title }}</h2>
-        <a href="{{ $editRoute }}"
-            class="group relative flex items-center justify-center px-4 py-2 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-transparent hover:border-gray-200">
-            <div class="absolute inset-0 topo-bg opacity-30"></div>
-            <div
-                class="absolute inset-0 bg-white/60 backdrop-blur-[2px] group-hover:bg-white/70 transition-all duration-300">
-            </div>
-            <div class="absolute inset-0 rounded-xl border border-white/60 border-b-2 border-b-gray-200/50"></div>
-            <span class="relative z-10 text-xs font-bold text-gray-600 flex items-center gap-2">
-                <span
-                    class="material-symbols-rounded text-[16px] text-gray-500 group-hover:text-school-primary transition-colors">edit</span>
-                Upravit
+    <div class="flex justify-between items-start mb-6">
+        <h2 class="text-xl sm:text-2xl font-bold text-gray-900">{{ $title }}</h2>
+        @if ($locked)
+            <span
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-green-50 border border-green-200 text-green-700 text-xs font-bold flex-shrink-0 ml-4">
+                <span class="material-symbols-rounded text-[15px]">verified</span>
+                Uznáno školou
             </span>
-        </a>
+        @else
+            <a href="{{ $editRoute }}"
+                class="group relative flex items-center justify-center px-4 py-2 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-transparent hover:border-gray-200 flex-shrink-0 ml-4">
+                <div class="absolute inset-0 topo-bg opacity-30"></div>
+                <div
+                    class="absolute inset-0 bg-white/60 backdrop-blur-[2px] group-hover:bg-white/70 transition-all duration-300">
+                </div>
+                <div class="absolute inset-0 rounded-xl border border-white/60 border-b-2 border-b-gray-200/50"></div>
+                <span class="relative z-10 text-xs font-bold text-gray-600 flex items-center gap-2">
+                    <span
+                        class="material-symbols-rounded text-[16px] text-gray-500 group-hover:text-school-primary transition-colors">edit</span>
+                    Upravit
+                </span>
+            </a>
+        @endif
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-5">
