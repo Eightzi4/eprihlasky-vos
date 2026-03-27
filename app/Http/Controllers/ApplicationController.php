@@ -78,6 +78,28 @@ class ApplicationController extends Controller
         'country',
     ];
 
+    public function status(Request $request, $id)
+    {
+        $application = Application::where('user_id', Auth::id())->findOrFail($id);
+        $application->load('attachments');
+
+        $step1Locked   = $application->isStep1Locked();
+        $hasMaturita   = $application->attachments->where('type', 'maturita')->isNotEmpty();
+
+        $s2raw = $application->step2Status();
+        $s2    = ($s2raw === 'pending' && ! $hasMaturita) ? 'incomplete' : $s2raw;
+
+        return response()->json([
+            's1'        => $application->step1Status(),
+            's2'        => $s2,
+            'ps'        => $application->paymentStatus(),
+            'nia'       => $step1Locked ? 'locked' : ($application->identity_verified ? 'complete' : 'incomplete'),
+            'gdpr'      => $step1Locked ? 'locked' : ($application->gdpr_accepted     ? 'complete' : 'incomplete'),
+            'submitted' => $application->submitted ? 'complete' : 'incomplete',
+            'canSubmit' => $application->isStep1Complete() && $application->gdpr_accepted && ! $application->submitted,
+        ]);
+    }
+
     public function programsIndex()
     {
         $programs = StudyProgram::where('is_active', true)
@@ -132,6 +154,10 @@ class ApplicationController extends Controller
             'round_id'         => $round->id,
             'status'           => 'draft',
             'email'            => Auth::user()->email,
+        ]);
+
+        $app->update([
+            'evidence_number' => $this->makeEvidenceNumber($app),
         ]);
 
         return redirect()->route('application.step1', $app->id);
@@ -340,5 +366,10 @@ class ApplicationController extends Controller
 
         return redirect()->route('application.step5', $id)
             ->with('success', 'Přihláška byla úspěšně odeslána!');
+    }
+
+    private function makeEvidenceNumber(Application $application): string
+    {
+        return 'EV' . now()->format('Y') . str_pad((string) $application->id, 5, '0', STR_PAD_LEFT);
     }
 }

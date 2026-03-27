@@ -41,6 +41,12 @@
                     {{ $application->first_name }} {{ $application->last_name }}
                 </h1>
                 <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500">
+                    @if ($application->evidence_number)
+                        <span class="flex items-center gap-1 font-bold text-school-primary">
+                            <span class="material-symbols-rounded text-[15px]">badge</span>
+                            {{ $application->evidence_number }}
+                        </span>
+                    @endif
                     @if ($application->application_number)
                         <span class="flex items-center gap-1 font-bold text-school-primary">
                             <span class="material-symbols-rounded text-[15px]">tag</span>
@@ -89,6 +95,53 @@
 
             <div
                 class="bg-white/80 backdrop-blur-xl rounded-3xl shadow-sm border border-white/60 p-6 sm:p-8 ring-1 ring-black/5">
+                <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-5">
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-900 mb-1">Evidenční číslo</h2>
+                        <p class="text-sm text-gray-500">Unikátní interní identifikátor přihlášky.</p>
+                    </div>
+                    <div class="text-sm font-bold text-school-primary">
+                        Aktuálně: {{ $application->evidence_number ?? '—' }}
+                    </div>
+                </div>
+
+                <form method="POST" action="{{ route('admin.applications.evidence-number', $application->id) }}"
+                    class="mt-6 flex flex-col sm:flex-row items-stretch sm:items-end gap-3">
+                    @csrf
+                    @method('PATCH')
+
+                    <div class="flex-1">
+                        <label for="evidence_number"
+                            class="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">
+                            Evidenční číslo
+                        </label>
+                        <input id="evidence_number" name="evidence_number" type="text"
+                            value="{{ old('evidence_number', $application->evidence_number) }}"
+                            class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white/80 text-gray-900 font-semibold shadow-sm focus:outline-none focus:ring-2 focus:ring-school-primary/20 focus:border-school-primary">
+                        @error('evidence_number')
+                            <p class="mt-2 text-sm font-medium text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <button type="submit"
+                        class="group relative inline-flex items-center justify-center px-6 py-3 rounded-xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 min-h-[52px]">
+                        <div class="absolute inset-0 topo-bg opacity-50 transition-opacity duration-300"></div>
+                        <div
+                            class="absolute inset-0 bg-white/60 backdrop-blur-[2px] group-hover:backdrop-blur-[4px] transition-all duration-300">
+                        </div>
+                        <div class="absolute inset-0 rounded-xl border border-white/60 border-b-4 border-b-gray-200/50">
+                        </div>
+                        <span class="relative z-10 text-gray-900 font-bold text-sm flex items-center whitespace-nowrap">
+                            <span
+                                class="material-symbols-rounded mr-2 text-[18px] text-gray-500 group-hover:text-school-primary transition-colors">save</span>
+                            Uložit číslo
+                        </span>
+                    </button>
+                </form>
+            </div>
+
+            <div
+                class="bg-white/80 backdrop-blur-xl rounded-3xl shadow-sm border border-white/60 p-6 sm:p-8 ring-1 ring-black/5">
                 <h2 class="text-xl font-bold text-gray-900 mb-6">Osobní a kontaktní údaje</h2>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-5">
                     @foreach ([['label' => 'Jméno a příjmení', 'value' => trim("{$application->first_name} {$application->last_name}") ?: '—'], ['label' => 'Pohlaví', 'value' => $application->gender ?? '—'], ['label' => 'Rodné číslo', 'value' => $application->birth_number ?? '—', 'mono' => true], ['label' => 'Datum narození', 'value' => $application->birth_date?->format('j. n. Y') ?? '—'], ['label' => 'Místo narození', 'value' => $application->birth_city ?? '—'], ['label' => 'Státní občanství', 'value' => $application->citizenship ?? '—'], ['label' => 'E-mail', 'value' => $application->email ?? '—'], ['label' => 'Telefon', 'value' => $application->phone ?? '—']] as $row)
@@ -120,8 +173,7 @@
                     @foreach ([['label' => 'IZO školy', 'value' => $application->izo ?? '—', 'mono' => true], ['label' => 'Typ školy', 'value' => $application->school_type ?? '—'], ['label' => 'Obor studia', 'value' => $application->previous_study_field ?? '—'], ['label' => 'Kód oboru (KKOV)', 'value' => $application->previous_study_field_code ?? '—', 'mono' => true], ['label' => 'Rok maturity', 'value' => $application->graduation_year ?? '—'], ['label' => 'Průměr známek', 'value' => $application->grade_average ?? '—']] as $row)
                         <div>
                             <p class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">{{ $row['label'] }}</p>
-                            <p
-                                class="text-sm font-semibold text-gray-900 {{ $row['mono'] ?? false ? 'font-mono' : '' }}">
+                            <p class="text-sm font-semibold text-gray-900 {{ $row['mono'] ?? false ? 'font-mono' : '' }}">
                                 {{ $row['value'] }}</p>
                         </div>
                     @endforeach
@@ -202,11 +254,7 @@
                             </form>
                         @endif
                     @else
-                        <div
-                            class="inline-flex items-center gap-2 text-orange-700 bg-orange-50 px-4 py-2 rounded-xl border border-orange-100 text-sm font-bold">
-                            <span class="material-symbols-rounded text-[18px]">warning</span>
-                            Vzdělání dosud nevyplněno
-                        </div>
+                        <span class="text-sm text-gray-400 font-medium">Vzdělání dosud nevyplněno</span>
                     @endif
                 </div>
             </div>
@@ -326,6 +374,38 @@
                         <span class="text-sm text-gray-400 font-medium">Žádný doklad k potvrzení</span>
                     @endif
                 </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <a href="{{ route('admin.applications.export.csv', $application->id) }}"
+                    class="group relative flex items-center justify-center px-6 py-4 rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 min-h-[72px]">
+                    <div class="absolute inset-0 topo-bg opacity-50 transition-opacity duration-300"></div>
+                    <div
+                        class="absolute inset-0 bg-white/60 backdrop-blur-[2px] group-hover:backdrop-blur-[4px] transition-all duration-300">
+                    </div>
+                    <div class="absolute inset-0 rounded-2xl border border-white/60 border-b-4 border-b-gray-200/50"></div>
+                    <span
+                        class="relative z-10 text-gray-900 font-bold text-base flex items-center justify-center whitespace-nowrap">
+                        <span
+                            class="material-symbols-rounded mr-3 text-[22px] text-gray-500 group-hover:text-school-primary transition-colors">table_view</span>
+                        Export CSV
+                    </span>
+                </a>
+
+                <a href="{{ route('admin.applications.export.pdf', $application->id) }}"
+                    class="group relative flex items-center justify-center px-6 py-4 rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 min-h-[72px]">
+                    <div class="absolute inset-0 topo-bg opacity-50 transition-opacity duration-300"></div>
+                    <div
+                        class="absolute inset-0 bg-white/60 backdrop-blur-[2px] group-hover:backdrop-blur-[4px] transition-all duration-300">
+                    </div>
+                    <div class="absolute inset-0 rounded-2xl border border-white/60 border-b-4 border-b-gray-200/50"></div>
+                    <span
+                        class="relative z-10 text-gray-900 font-bold text-base flex items-center justify-center whitespace-nowrap">
+                        <span
+                            class="material-symbols-rounded mr-3 text-[22px] text-gray-500 group-hover:text-school-primary transition-colors">picture_as_pdf</span>
+                        Export PDF
+                    </span>
+                </a>
             </div>
 
         </div>

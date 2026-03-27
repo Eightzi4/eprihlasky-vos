@@ -19,6 +19,7 @@ class Application extends Model
         'submitted',
         'submitted_at',
         'application_number',
+        'evidence_number',
         'prev_study_info_accepted',
         'payment_accepted',
         'first_name',
@@ -126,7 +127,7 @@ class Application extends Model
             if (empty($this->{$field})) return false;
         }
 
-        return true;
+        return $this->attachments()->where('type', 'maturita')->exists();
     }
 
     public function isStep1Locked(): bool

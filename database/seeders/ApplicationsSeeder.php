@@ -49,6 +49,7 @@ class ApplicationsSeeder extends Seeder
                 'round_id'         => $round->id,
                 'status'           => 'draft',
                 'email'            => $email,
+                'evidence_number'  => 'EV2026' . str_pad($i + 1, 5, '0', STR_PAD_LEFT),
                 'first_name'       => $firstName,
                 'last_name'        => $lastName,
                 'gender'           => $faker->randomElement(['Muž', 'Žena']),

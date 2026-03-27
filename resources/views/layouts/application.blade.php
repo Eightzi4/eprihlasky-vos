@@ -223,8 +223,16 @@
                     $fmtDate = fn($dt) => $dt->format('j. n. Y');
                 @endphp
 
-                <div
-                    class="bg-white/80 backdrop-blur-xl rounded-2xl shadow-sm border border-white/60 p-6 ring-1 ring-black/5">
+                <div class="bg-white/80 backdrop-blur-xl rounded-2xl shadow-sm border border-white/60 p-6 ring-1 ring-black/5"
+                    x-data="statusPanel({
+                        s1: '{{ $s1 }}',
+                        s2: '{{ $s2 }}',
+                        ps: '{{ $ps }}',
+                        nia: '{{ $niaStatus }}',
+                        gdpr: '{{ $gdprStatus }}',
+                        submitted: '{{ $submittedStatus }}',
+                        canSubmit: {{ $application->isStep1Complete() && $application->gdpr_accepted && !$application->submitted ? 'true' : 'false' }}
+                    })" x-init="init()">
                     <h3 class="font-bold text-gray-900 mb-5 flex items-center gap-2">
                         <span class="material-symbols-rounded text-gray-400 text-[20px]">rule</span>
                         Stav přihlášky
@@ -237,26 +245,30 @@
                     <ul class="space-y-2.5 text-sm font-medium">
                         <li class="flex items-center gap-3">
                             <span
-                                class="material-symbols-rounded {{ $statusIcon[$s1]['cls'] }} text-[20px] flex-shrink-0">{{ $statusIcon[$s1]['icon'] }}</span>
-                            <span class="{{ $labelCls[$s1] }}">Osobní údaje</span>
+                                class="material-symbols-rounded text-[20px] flex-shrink-0 transition-colors duration-300"
+                                :class="icon(s1).cls" x-text="icon(s1).icon"></span>
+                            <span class="transition-colors duration-300" :class="lbl(s1)">Osobní údaje</span>
                         </li>
                         <li class="flex items-center gap-3 pl-7">
                             <span
-                                class="material-symbols-rounded {{ $statusIcon[$niaStatus]['cls'] }} text-[18px] flex-shrink-0">{{ $statusIcon[$niaStatus]['icon'] }}</span>
-                            <span class="{{ $labelCls[$niaStatus] }} text-xs">Ověření identity</span>
+                                class="material-symbols-rounded text-[18px] flex-shrink-0 transition-colors duration-300"
+                                :class="icon(nia).cls" x-text="icon(nia).icon"></span>
+                            <span class="text-xs transition-colors duration-300" :class="lbl(nia)">Ověření
+                                identity</span>
                         </li>
                         <li class="flex items-center gap-3">
                             <span
-                                class="material-symbols-rounded {{ $statusIcon[$gdprStatus]['cls'] }} text-[20px] flex-shrink-0">{{ $statusIcon[$gdprStatus]['icon'] }}</span>
-                            <span class="{{ $labelCls[$gdprStatus] }}">Souhlas s GDPR</span>
+                                class="material-symbols-rounded text-[20px] flex-shrink-0 transition-colors duration-300"
+                                :class="icon(gdpr).cls" x-text="icon(gdpr).icon"></span>
+                            <span class="transition-colors duration-300" :class="lbl(gdpr)">Souhlas s GDPR</span>
                         </li>
                     </ul>
 
                     <div class="mt-3 pt-3 border-t border-gray-100 flex items-center gap-3">
-                        <span
-                            class="material-symbols-rounded {{ $statusIcon[$submittedStatus]['cls'] }} text-[20px] flex-shrink-0">{{ $statusIcon[$submittedStatus]['icon'] }}</span>
-                        <span
-                            class="{{ $application->submitted ? 'text-gray-900 font-bold' : 'text-gray-500' }} text-sm">
+                        <span class="material-symbols-rounded text-[20px] flex-shrink-0 transition-colors duration-300"
+                            :class="icon(submitted).cls" x-text="icon(submitted).icon"></span>
+                        <span class="text-sm transition-colors duration-300"
+                            :class="submitted === 'complete' ? 'text-gray-900 font-bold' : 'text-gray-500'">
                             Přihláška odeslána
                         </span>
                     </div>
@@ -270,13 +282,17 @@
                     <ul class="space-y-2.5 text-sm font-medium">
                         <li class="flex items-center gap-3">
                             <span
-                                class="material-symbols-rounded {{ $statusIcon[$s2]['cls'] }} text-[20px] flex-shrink-0">{{ $statusIcon[$s2]['icon'] }}</span>
-                            <span class="{{ $labelCls[$s2] }}">Předchozí vzdělání</span>
+                                class="material-symbols-rounded text-[20px] flex-shrink-0 transition-colors duration-300"
+                                :class="icon(s2).cls" x-text="icon(s2).icon"></span>
+                            <span class="transition-colors duration-300" :class="lbl(s2)">Předchozí
+                                vzdělání</span>
                         </li>
                         <li class="flex items-center gap-3">
                             <span
-                                class="material-symbols-rounded {{ $statusIcon[$ps]['cls'] }} text-[20px] flex-shrink-0">{{ $statusIcon[$ps]['icon'] }}</span>
-                            <span class="{{ $labelCls[$ps] }}">Přihláška zaplacena</span>
+                                class="material-symbols-rounded text-[20px] flex-shrink-0 transition-colors duration-300"
+                                :class="icon(ps).cls" x-text="icon(ps).icon"></span>
+                            <span class="transition-colors duration-300" :class="lbl(ps)">Přihláška
+                                zaplacena</span>
                         </li>
                     </ul>
                 </div>
@@ -287,6 +303,7 @@
 
     <script>
         const AUTOSAVE_URL = "{{ route('application.autosave', $application->id) }}";
+        const STATUS_URL = "{{ route('application.status', $application->id) }}";
         const FILE_UPLOAD_URL = "{{ route('application.uploadAttachment', $application->id) }}";
         const FILE_DELETE_URL =
             "{{ route('application.deleteAttachment', ['id' => $application->id, 'attachmentId' => '__ID__']) }}";
@@ -374,6 +391,78 @@
                     autosaveField(el.dataset.autosaveCheckbox, el.checked ? '1' : '0');
                 });
             });
+        });
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('statusPanel', (initial) => ({
+                s1: initial.s1,
+                s2: initial.s2,
+                ps: initial.ps,
+                nia: initial.nia,
+                gdpr: initial.gdpr,
+                submitted: initial.submitted,
+                canSubmit: initial.canSubmit,
+
+                icons: {
+                    complete: {
+                        icon: 'check_circle',
+                        cls: 'text-green-500'
+                    },
+                    incomplete: {
+                        icon: 'error',
+                        cls: 'text-orange-500'
+                    },
+                    locked: {
+                        icon: 'lock',
+                        cls: 'text-gray-400'
+                    },
+                    pending: {
+                        icon: 'pending',
+                        cls: 'text-blue-400'
+                    },
+                },
+                labels: {
+                    complete: 'text-gray-900',
+                    incomplete: 'text-gray-500',
+                    locked: 'text-gray-400',
+                    pending: 'text-gray-700',
+                },
+
+                icon(status) {
+                    return this.icons[status] || this.icons.incomplete;
+                },
+                lbl(status) {
+                    return this.labels[status] || this.labels.incomplete;
+                },
+
+                async refresh() {
+                    try {
+                        const res = await fetch(STATUS_URL, {
+                            headers: {
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': CSRF_TOKEN
+                            }
+                        });
+                        const data = await res.json();
+                        this.s1 = data.s1;
+                        this.s2 = data.s2;
+                        this.ps = data.ps;
+                        this.nia = data.nia;
+                        this.gdpr = data.gdpr;
+                        this.submitted = data.submitted;
+                        this.canSubmit = data.canSubmit;
+
+                        window.dispatchEvent(new CustomEvent('status-updated', {
+                            detail: data
+                        }));
+                    } catch (e) {}
+                },
+
+                init() {
+                    window.addEventListener('autosave-ok', () => this.refresh());
+                    window.addEventListener('file-uploaded', () => this.refresh());
+                    window.addEventListener('file-deleted', () => this.refresh());
+                },
+            }));
         });
     </script>
 </body>

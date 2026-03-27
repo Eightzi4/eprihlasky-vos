@@ -29,6 +29,25 @@
         ]
     })">
 
+        @if (session('error'))
+            <div class="bg-red-50 border border-red-200 rounded-3xl p-5 flex items-start gap-4 mb-6">
+                <span class="material-symbols-rounded text-school-primary text-[24px] flex-shrink-0">error</span>
+                <div>
+                    <p class="font-bold text-red-900 text-sm">Ověření identity se nezdařilo</p>
+                    <p class="text-xs text-red-700 mt-0.5">{{ session('error') }}</p>
+                </div>
+            </div>
+        @endif
+
+        @if (session('success'))
+            <div class="bg-green-50 border border-green-200 rounded-3xl p-5 flex items-center gap-4 mb-6">
+                <span class="material-symbols-rounded text-green-500 text-[24px] flex-shrink-0">verified</span>
+                <div>
+                    <p class="font-bold text-green-900 text-sm">{{ session('success') }}</p>
+                </div>
+            </div>
+        @endif
+
         <div
             class="relative bg-white/80 backdrop-blur-xl rounded-3xl shadow-lg border-2 {{ $isLocked ? 'border-gray-200' : 'border-school-primary/20 hover:border-school-primary/40' }} p-6 sm:p-8 mb-8 overflow-hidden group transition-all duration-500">
             <div

@@ -262,13 +262,8 @@
                         case 'submitted':
                             return app.submitted ? 'complete' : 'incomplete';
                         case 'step2': {
-                            const req = ['previous_school', 'izo', 'school_type',
-                                'previous_study_field',
-                                'previous_study_field_code', 'graduation_year', 'grade_average'
-                            ];
-                            const filled = req.every(f => app[f]);
                             if (app.prev_study_info_accepted) return 'complete';
-                            if (filled) return 'pending';
+                            if (app.prev_study_info) return 'pending';
                             return 'incomplete';
                         }
                         case 'payment':

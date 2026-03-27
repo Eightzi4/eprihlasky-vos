@@ -31,33 +31,38 @@
         @endif
 
         @if ($submitLabel)
-            @if ($submitDisabled)
-                <div class="relative flex items-center justify-center px-6 py-3 sm:px-8 sm:py-4 rounded-xl overflow-hidden opacity-50 cursor-not-allowed select-none"
-                    title="Vyplňte všechny povinné údaje a přijměte souhlas s GDPR">
-                    <div class="absolute inset-0 bg-gray-100 rounded-xl border border-gray-200"></div>
-                    <span
-                        class="relative z-10 text-gray-500 font-bold text-base sm:text-lg flex items-center whitespace-nowrap">
-                        {{ $submitLabel }}
-                        <span class="material-symbols-rounded ml-2 sm:ml-3 text-[20px]">lock</span>
-                    </span>
-                </div>
-            @else
-                <button type="submit"
-                    class="group relative flex items-center justify-center px-6 py-3 sm:px-8 sm:py-4 rounded-xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer">
-                    <div class="absolute inset-0 topo-bg opacity-50 transition-opacity duration-300"></div>
-                    <div
-                        class="absolute inset-0 bg-white/60 backdrop-blur-[2px] group-hover:backdrop-blur-[4px] transition-all duration-300">
-                    </div>
-                    <div class="absolute inset-0 rounded-xl border border-white/60 border-b-4 border-b-gray-200/50">
-                    </div>
-                    <span
-                        class="relative z-10 text-gray-900 font-bold text-base sm:text-lg flex items-center drop-shadow-sm whitespace-nowrap">
-                        {{ $submitLabel }}
+            <div x-data="{ disabled: {{ $submitDisabled ? 'true' : 'false' }} }" x-init="window.addEventListener('status-updated', e => { disabled = !e.detail.canSubmit; })">
+
+                <template x-if="disabled">
+                    <div class="relative flex items-center justify-center px-6 py-3 sm:px-8 sm:py-4 rounded-xl overflow-hidden opacity-50 cursor-not-allowed select-none"
+                        title="Vyplňte všechny povinné údaje a přijměte souhlas s GDPR">
+                        <div class="absolute inset-0 bg-gray-100 rounded-xl border border-gray-200"></div>
                         <span
-                            class="material-symbols-rounded ml-2 sm:ml-3 text-[20px] text-school-primary transition-transform duration-300 group-hover:translate-x-1">send</span>
-                    </span>
-                </button>
-            @endif
+                            class="relative z-10 text-gray-500 font-bold text-base sm:text-lg flex items-center whitespace-nowrap">
+                            {{ $submitLabel }}
+                            <span class="material-symbols-rounded ml-2 sm:ml-3 text-[20px]">lock</span>
+                        </span>
+                    </div>
+                </template>
+
+                <template x-if="!disabled">
+                    <button type="submit"
+                        class="group relative flex items-center justify-center px-6 py-3 sm:px-8 sm:py-4 rounded-xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer">
+                        <div class="absolute inset-0 topo-bg opacity-50 transition-opacity duration-300"></div>
+                        <div
+                            class="absolute inset-0 bg-white/60 backdrop-blur-[2px] group-hover:backdrop-blur-[4px] transition-all duration-300">
+                        </div>
+                        <div class="absolute inset-0 rounded-xl border border-white/60 border-b-4 border-b-gray-200/50">
+                        </div>
+                        <span
+                            class="relative z-10 text-gray-900 font-bold text-base sm:text-lg flex items-center drop-shadow-sm whitespace-nowrap">
+                            {{ $submitLabel }}
+                            <span
+                                class="material-symbols-rounded ml-2 sm:ml-3 text-[20px] text-school-primary transition-transform duration-300 group-hover:translate-x-1">send</span>
+                        </span>
+                    </button>
+                </template>
+            </div>
         @elseif ($nextRoute)
             <button type="button" onclick="navigateTo('{{ route($nextRoute, $application->id) }}')"
                 class="group relative flex items-center justify-center px-6 py-3 sm:px-8 sm:py-4 rounded-xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer">

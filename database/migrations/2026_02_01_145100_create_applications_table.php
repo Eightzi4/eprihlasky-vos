@@ -25,6 +25,7 @@ return new class extends Migration
             $table->boolean('payment_accepted')->default(false);
 
             $table->string('application_number')->nullable();
+            $table->string('evidence_number')->nullable()->unique();
             $table->timestamp('submitted_at')->nullable();
 
             $table->timestamp('education_locked_at')->nullable();

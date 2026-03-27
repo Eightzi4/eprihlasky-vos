@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Barryvdh\DomPDF\Facade\Pdf;
 use App\Mail\AdminLoginLinkMail;
 use App\Models\Admin;
 use App\Models\AdminLoginTicket;
@@ -13,6 +14,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AdminController extends Controller
 {
@@ -162,6 +165,49 @@ class AdminController extends Controller
         return view('admin.applications.show', compact('application'));
     }
 
+    public function updateEvidenceNumber(Request $request, $id)
+    {
+        $application = Application::findOrFail($id);
+
+        $validated = $request->validate([
+            'evidence_number' => 'required|string|max:50|unique:applications,evidence_number,' . $application->id,
+        ]);
+
+        $application->update([
+            'evidence_number' => $validated['evidence_number'],
+        ]);
+
+        return redirect()->route('admin.applications.show', $id)
+            ->with('success', 'Evidencni cislo bylo ulozeno.');
+    }
+
+    public function exportApplicationCsv($id): StreamedResponse
+    {
+        $application = $this->loadApplicationForExport($id);
+        $filename = 'prihlaska-' . ($application->evidence_number ?: $application->application_number ?: $application->id) . '.csv';
+        $columns = $this->csvColumns($application);
+
+        return response()->streamDownload(function () use ($columns) {
+            $handle = fopen('php://output', 'w');
+            fwrite($handle, chr(0xEF) . chr(0xBB) . chr(0xBF));
+            fputcsv($handle, array_keys($columns), ';');
+            fputcsv($handle, array_values($columns), ';');
+            fclose($handle);
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
+    }
+
+    public function exportApplicationPdf($id): Response
+    {
+        $application = $this->loadApplicationForExport($id);
+        $pdf = Pdf::loadView('admin.applications.pdf', [
+            'application' => $application,
+        ])->setPaper('a4');
+
+        return $pdf->download('prihlaska-' . ($application->evidence_number ?: $application->application_number ?: $application->id) . '.pdf');
+    }
+
     public function acceptPayment($id)
     {
         Application::findOrFail($id)->update(['payment_accepted' => true]);
@@ -204,5 +250,34 @@ class AdminController extends Controller
         $request->validate(['password' => 'required|min:8|confirmed']);
         $this->guard()->user()->update(['password' => Hash::make($request->password)]);
         return redirect()->route('admin.dashboard')->with('success', 'Heslo bylo uloženo.');
+    }
+    private function loadApplicationForExport($id): Application
+    {
+        return Application::with(['user', 'studyProgram', 'attachments', 'round'])
+            ->findOrFail($id);
+    }
+
+    private function csvColumns(Application $application): array
+    {
+        $phone = $application->phone ?: '';
+
+        return [
+            'PRIJMENI' => $application->last_name ?: '',
+            'JMENO' => $application->first_name ?: '',
+            'TB_OKRES' => '',
+            'DATUM_NAR' => $application->birth_date?->format('d.m.Y') ?: '',
+            'RODNE_C' => $application->birth_number ?: '',
+            'TELEFON' => $phone,
+            'TEL_MOBIL' => $phone,
+            'POHLAVI' => $application->gender ?: '',
+            'MISTO_NAR' => $application->birth_city ?: '',
+            'OKRES_NAR' => '',
+            'ST_PRISL' => $application->citizenship ?: '',
+            'POZNAMKA' => $application->note ?: '',
+            'KOD_ZP' => $application->studyProgram?->code ?: '',
+            'PRIHL_OD' => $application->round?->academic_year ?: '',
+            'EV_CISLO' => $application->evidence_number ?: $application->application_number ?: (string) $application->id,
+            'E_MAIL' => $application->email ?: '',
+        ];
     }
 }

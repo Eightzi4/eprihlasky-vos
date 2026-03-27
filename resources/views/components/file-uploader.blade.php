@@ -67,6 +67,7 @@
                     url: data.url,
                 };
                 if (!this.multiple) { this.uploadedFiles = [entry]; } else { this.uploadedFiles.push(entry); }
+                window.dispatchEvent(new CustomEvent('file-uploaded'));
             } catch { this.uploadError = 'Nepodařilo se nahrát soubor. Zkuste to znovu.'; }
         }
         this.isUploading = false;
@@ -79,6 +80,7 @@
         try {
             await fetch(url, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': this.csrfToken, 'Accept': 'application/json' } });
             this.uploadedFiles = this.uploadedFiles.filter(f => f.attachmentId !== attachmentId);
+            window.dispatchEvent(new CustomEvent('file-deleted'));
         } catch { this.uploadError = 'Soubor se nepodařilo odstranit.'; }
     },
 

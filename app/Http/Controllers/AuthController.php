@@ -29,10 +29,10 @@ class AuthController extends Controller
             return view('auth.password-login', ['email' => $email]);
         }
 
-        if (!$user) {
+        if (! $user) {
             $user = User::create([
                 'email' => $email,
-                'name' => strstr($email, '@', true),
+                'name'  => strstr($email, '@', true),
             ]);
         }
 
@@ -45,8 +45,8 @@ class AuthController extends Controller
         $token = Str::random(32);
 
         $ticket = LoginTicket::create([
-            'user_id' => $user->id,
-            'token' => $token,
+            'user_id'    => $user->id,
+            'token'      => $token,
             'expires_at' => now()->addMinutes(30),
         ]);
 
@@ -72,38 +72,39 @@ class AuthController extends Controller
 
     public function loginWithPassword(Request $request)
     {
-        $credentials = $request->validate([
-            'email' => 'required|email',
-            'password' => 'required'
+        $request->validate([
+            'email'    => 'required|email',
+            'password' => 'required',
         ]);
 
-        if (Auth::attempt($credentials)) {
+        if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
             $request->session()->regenerate();
             return redirect()->intended('dashboard');
         }
 
-        return back()->withErrors([
-            'password' => 'Zadané heslo není správné.',
-        ]);
+        return view('auth.password-login', ['email' => $request->email])
+            ->withErrors(['password' => 'Zadané heslo není správné.']);
     }
 
     public function verifyTicket(Request $request)
     {
         $token = $request->query('loginTicket');
 
-        if (!$token) return redirect()->route('login')->with('error', 'Chybějící přihlašovací token.');
+        if (! $token) {
+            return redirect()->route('login')->with('error', 'Chybějící přihlašovací token.');
+        }
 
         $ticket = LoginTicket::where('token', $token)
             ->where('expires_at', '>', now())
             ->whereNull('used_at')
             ->first();
 
-        if (!$ticket) return redirect()->route('login')->with('error', 'Neplatný nebo expirovaný odkaz.');
+        if (! $ticket) {
+            return redirect()->route('login')->with('error', 'Neplatný nebo expirovaný odkaz.');
+        }
 
         Auth::login($ticket->user);
-
         $ticket->update(['used_at' => now()]);
-
         $request->session()->regenerate();
 
         return redirect()->route('dashboard');

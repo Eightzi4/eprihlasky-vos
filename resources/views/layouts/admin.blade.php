@@ -101,8 +101,8 @@
                         <div class="absolute inset-0 rounded-xl border border-white/60 border-b-2 border-b-gray-200/50">
                         </div>
                         <span
-                            class="relative z-10 text-gray-600 font-bold text-xs flex items-center gap-1.5 group-hover:text-school-primary transition-colors">
-                            <span class="material-symbols-rounded text-[18px]">logout</span>
+                            class="relative z-10 text-gray-600 font-bold text-xs flex items-center gap-1.5">
+                            <span class="material-symbols-rounded text-[18px] group-hover:text-school-primary group-hover:-translate-x-1 transition-all duration-300">logout</span>
                             <span class="hidden sm:inline">Odhlásit se</span>
                         </span>
                     </button>

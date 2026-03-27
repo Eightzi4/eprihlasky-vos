@@ -9,6 +9,7 @@ use App\Http\Controllers\NiaMockController;
 use App\Models\Application;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\MainAdminController;
 
 Route::get('/link-storage', function () {
     try {
@@ -64,6 +65,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/application/{id}/payment',     [ApplicationController::class, 'step4'])->name('application.step4');
     Route::get('/application/{id}/summary',     [ApplicationController::class, 'step5'])->name('application.step5');
 
+    Route::get('/application/{id}/status',   [ApplicationController::class, 'status'])->name('application.status');
     Route::patch('/application/{id}/autosave',  [ApplicationController::class, 'autosave'])->name('application.autosave');
     Route::post('/application/{id}/upload',     [ApplicationController::class, 'uploadAttachment'])->name('application.uploadAttachment');
     Route::post('/application/{id}/submit',     [ApplicationController::class, 'submit'])->name('application.submit');
@@ -87,6 +89,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/',              [AdminController::class, 'dashboard'])->name('dashboard');
         Route::get('/applications',  [AdminController::class, 'applications'])->name('applications');
         Route::get('/applications/{id}', [AdminController::class, 'showApplication'])->name('applications.show');
+        Route::patch('/applications/{id}/evidence-number', [AdminController::class, 'updateEvidenceNumber'])->name('applications.evidence-number');
+        Route::get('/applications/{id}/export/csv', [AdminController::class, 'exportApplicationCsv'])->name('applications.export.csv');
+        Route::get('/applications/{id}/export/pdf', [AdminController::class, 'exportApplicationPdf'])->name('applications.export.pdf');
 
         Route::patch('/applications/{id}/accept-payment',   [AdminController::class, 'acceptPayment'])->name('applications.acceptPayment');
         Route::patch('/applications/{id}/revert-payment',   [AdminController::class, 'revertPayment'])->name('applications.revertPayment');
@@ -95,5 +100,22 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         Route::patch('/account/email',    [AdminController::class, 'updateEmail'])->name('account.email');
         Route::patch('/account/password', [AdminController::class, 'updatePassword'])->name('account.password');
+
+        Route::middleware(App\Http\Middleware\IsMainAdmin::class)->group(function () {
+            Route::get('/rounds', [MainAdminController::class, 'rounds'])->name('rounds');
+
+            Route::post('/programs', [MainAdminController::class, 'storeProgram'])->name('programs.store');
+            Route::patch('/programs/{studyProgram}', [MainAdminController::class, 'updateProgram'])->name('programs.update');
+            Route::delete('/programs/{studyProgram}', [MainAdminController::class, 'destroyProgram'])->name('programs.destroy');
+
+            Route::post('/application-rounds', [MainAdminController::class, 'storeRound'])->name('application-rounds.store');
+            Route::patch('/application-rounds/{applicationRound}', [MainAdminController::class, 'updateRound'])->name('application-rounds.update');
+            Route::delete('/application-rounds/{applicationRound}', [MainAdminController::class, 'destroyRound'])->name('application-rounds.destroy');
+
+            Route::get('/admins', [MainAdminController::class, 'admins'])->name('admins');
+            Route::post('/admins', [MainAdminController::class, 'storeAdmin'])->name('admins.store');
+            Route::patch('/admins/{admin}', [MainAdminController::class, 'updateAdmin'])->name('admins.update');
+            Route::delete('/admins/{admin}', [MainAdminController::class, 'destroyAdmin'])->name('admins.destroy');
+        });
     });
 });
