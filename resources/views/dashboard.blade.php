@@ -141,32 +141,30 @@
                 <div class="p-6 space-y-4">
                     @foreach ($applications as $app)
                         @php
-                            $statuses = [
-                                $app->step1Status(),
-                                $app->isStep1Locked()
-                                    ? 'locked'
-                                    : ($app->identity_verified
-                                        ? 'complete'
-                                        : 'incomplete'),
-                                $app->isStep1Locked() ? 'locked' : ($app->gdpr_accepted ? 'complete' : 'incomplete'),
-                                $app->submitted ? 'complete' : 'incomplete',
-                                $app->step2Status(),
-                                $app->paymentStatus(),
+                            $statuses = $app->checkpointStatuses();
+                            $statusValues = array_values($statuses);
+                            $statusMeta = [
+                                'complete' => ['color' => 'bg-green-500', 'label' => 'Splněno'],
+                                'locked' => ['color' => 'bg-gray-300', 'label' => 'Uzamčeno'],
+                                'pending' => ['color' => 'bg-blue-400', 'label' => 'Čeká na schválení'],
+                                'failed' => ['color' => 'bg-school-primary', 'label' => 'Nesplněno po termínu'],
+                                'incomplete' => ['color' => 'bg-orange-400', 'label' => 'Je potřeba doplnit'],
+                            ];
+                            $checkpointLabels = [
+                                'step1' => 'Osobní údaje',
+                                'identity_verified' => 'Ověření identity',
+                                'gdpr_accepted' => 'Souhlas GDPR',
+                                'submitted' => 'Přihláška odeslána',
+                                'step2' => 'Vzdělání',
+                                'payment' => 'Platba',
                             ];
 
-                            $total = count($statuses);
-                            $completed = collect($statuses)
+                            $total = count($statusValues);
+                            $completed = collect($statusValues)
                                 ->filter(fn($s) => $s === 'complete' || $s === 'locked')
                                 ->count();
-                            $hasPending = collect($statuses)->contains('pending');
-                            $hasIssue = collect($statuses)->contains('incomplete');
-
-                            $dotColor = fn($s) => match ($s) {
-                                'complete' => 'bg-green-500',
-                                'locked' => 'bg-gray-300',
-                                'pending' => 'bg-blue-400',
-                                default => 'bg-orange-400',
-                            };
+                            $hasPending = collect($statusValues)->contains('pending');
+                            $hasIssue = collect($statusValues)->contains(fn($status) => in_array($status, ['incomplete', 'failed'], true));
 
                             if ($app->submitted) {
                                 $overallCls = 'bg-green-50 text-green-700 border-green-200';
@@ -233,8 +231,9 @@
 
                                         <div class="flex items-center gap-4">
                                             <div class="flex items-center gap-1.5">
-                                                @foreach ($statuses as $s)
-                                                    <span class="h-2.5 w-2.5 rounded-full {{ $dotColor($s) }}"></span>
+                                                @foreach ($statuses as $key => $status)
+                                                    <span class="h-2.5 w-2.5 rounded-full {{ $statusMeta[$status]['color'] }}"
+                                                        title="{{ $checkpointLabels[$key] }}: {{ $statusMeta[$status]['label'] }}"></span>
                                                 @endforeach
                                             </div>
                                             <span class="text-sm font-semibold text-gray-500">

@@ -42,7 +42,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/dashboard', function () {
         $applications = Application::where('user_id', Auth::id())
-            ->with(['studyProgram', 'round'])
+            ->with(['studyProgram', 'round', 'attachments'])
             ->orderBy('created_at', 'desc')
             ->get();
         return view('dashboard', compact('applications'));

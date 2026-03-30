@@ -25,7 +25,7 @@
     $baseInput = 'block w-full border rounded-xl leading-5 sm:text-sm transition-all shadow-sm focus:outline-none';
     $lockedCls = 'bg-gray-50 text-gray-500 cursor-not-allowed focus:border-gray-200 border-gray-200';
     $editableCls =
-        'bg-white/50 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-school-primary focus:border-school-primary';
+        'border-gray-200 bg-white/50 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-school-primary focus:border-school-primary';
     $paddingCls = $icon ? 'pl-10 pr-3 py-3' : 'px-4 py-3';
 
     $inputStateCls = $isLocked ? $lockedCls : $editableCls;

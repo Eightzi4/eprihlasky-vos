@@ -179,11 +179,23 @@ class Application extends Model
             }
         }
 
-        $hasHalfYearReport = $this->attachments()->where('type', 'half_year_report')->exists();
+        $hasHalfYearReport = $this->hasAttachmentType('half_year_report');
         $hasMaturita = $this->bring_maturita_in_person
-            || $this->attachments()->where('type', 'maturita')->exists();
+            || $this->hasAttachmentType('maturita');
 
         return $hasHalfYearReport && $hasMaturita;
+    }
+
+    public function checkpointStatuses(): array
+    {
+        return [
+            'step1' => $this->step1Status(),
+            'identity_verified' => $this->niaStatus(),
+            'gdpr_accepted' => $this->gdprStatus(),
+            'submitted' => $this->submittedStatus(),
+            'step2' => $this->step2Status(),
+            'payment' => $this->paymentStatus(),
+        ];
     }
 
     public function applicantCompletionRequirementsMet(): bool
@@ -407,7 +419,7 @@ class Application extends Model
     public function evaluateStates(): void
     {
         $this->prev_study_info = $this->isStep2Complete();
-        $this->paid = $this->attachments()->where('type', 'payment')->exists();
+        $this->paid = $this->hasAttachmentType('payment');
         $this->save();
     }
 
@@ -426,5 +438,14 @@ class Application extends Model
             'payment' => ! $this->paid,
             default => false,
         };
+    }
+
+    private function hasAttachmentType(string $type): bool
+    {
+        if ($this->relationLoaded('attachments')) {
+            return $this->attachments->contains(fn ($attachment) => $attachment->type === $type);
+        }
+
+        return $this->attachments()->where('type', $type)->exists();
     }
 }

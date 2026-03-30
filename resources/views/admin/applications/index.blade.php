@@ -5,7 +5,7 @@
 @section('content')
     <div class="bg-white/80 backdrop-blur-xl shadow-sm rounded-3xl overflow-hidden border border-white/60 ring-1 ring-black/5"
         x-data="adminTable({
-            applications: {{ Js::from($applications) }},
+            applications: {{ Js::from($applicationsData) }},
             programs: {{ Js::from($programs) }}
         })" x-init="$watch('searchTerm', () => currentPage = 1);
         $watch('activeFilters', () => currentPage = 1, { deep: true });
@@ -76,6 +76,7 @@
                                 <option value="complete">Splněno</option>
                                 <option value="incomplete">Nesplněno</option>
                                 <option value="pending">Čeká na schválení</option>
+                                <option value="failed">Nesplněno po termínu</option>
                                 <option value="locked">Uzamčeno</option>
                             </select>
                             <div class="absolute inset-y-0 right-0 flex items-center pr-0.5 pointer-events-none">
@@ -238,41 +239,13 @@
                         complete: 'Splněno',
                         incomplete: 'Nesplněno',
                         pending: 'Čeká na schválení',
+                        failed: 'Nesplněno po termínu',
                         locked: 'Uzamčeno'
                     } [s] || s;
                 },
 
                 checkpointStatus(app, key) {
-                    const locked = !!app.submitted;
-                    switch (key) {
-                        case 'identity_verified':
-                            return locked ? 'locked' : (app.identity_verified ? 'complete' :
-                                'incomplete');
-                        case 'step1': {
-                            const req = ['first_name', 'last_name', 'gender', 'birth_number',
-                                'birth_date',
-                                'birth_city', 'citizenship', 'email', 'phone', 'street', 'city',
-                                'zip', 'country'
-                            ];
-                            const done = req.every(f => app[f]) && app.identity_verified;
-                            return locked ? 'locked' : (done ? 'complete' : 'incomplete');
-                        }
-                        case 'gdpr_accepted':
-                            return locked ? 'locked' : (app.gdpr_accepted ? 'complete' : 'incomplete');
-                        case 'submitted':
-                            return app.submitted ? 'complete' : 'incomplete';
-                        case 'step2': {
-                            if (app.prev_study_info_accepted) return 'complete';
-                            if (app.prev_study_info) return 'pending';
-                            return 'incomplete';
-                        }
-                        case 'payment':
-                            if (app.payment_accepted) return 'complete';
-                            if (app.paid) return 'pending';
-                            return 'incomplete';
-                        default:
-                            return 'incomplete';
-                    }
+                    return app.checkpoint_statuses?.[key] || 'incomplete';
                 },
 
                 dotColor(status) {
@@ -280,6 +253,7 @@
                         complete: 'bg-green-500',
                         incomplete: 'bg-orange-400',
                         pending: 'bg-blue-400',
+                        failed: 'bg-school-primary',
                         locked: 'bg-gray-300'
                     } [status] || 'bg-gray-200';
                 },
@@ -310,7 +284,7 @@
                             label: 'Platba'
                         },
                     ].map(c => ({
-                        label: c.label,
+                        label: `${c.label}: ${this.stateLabel(this.checkpointStatus(app, c.key))}`,
                         color: this.dotColor(this.checkpointStatus(app, c.key))
                     }));
                 },

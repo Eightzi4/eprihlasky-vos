@@ -164,9 +164,19 @@ class AdminController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
+        $applicationsData = $applications
+            ->load('attachments')
+            ->map(function (Application $application) {
+                $data = $application->toArray();
+                unset($data['attachments']);
+                $data['checkpoint_statuses'] = $application->checkpointStatuses();
+
+                return $data;
+            });
+
         $programs = StudyProgram::orderBy('name')->get();
 
-        return view('admin.applications.index', compact('applications', 'programs'));
+        return view('admin.applications.index', compact('applicationsData', 'programs'));
     }
 
     public function showApplication($id)
