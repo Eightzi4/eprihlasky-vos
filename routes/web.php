@@ -89,12 +89,16 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/',              [AdminController::class, 'dashboard'])->name('dashboard');
         Route::get('/applications',  [AdminController::class, 'applications'])->name('applications');
         Route::get('/applications/{id}', [AdminController::class, 'showApplication'])->name('applications.show');
+        Route::get('/applications/{id}/attachments/{attachmentId}', [AdminController::class, 'downloadAttachment'])->name('applications.attachments.download');
         Route::patch('/applications/{id}/evidence-number', [AdminController::class, 'updateEvidenceNumber'])->name('applications.evidence-number');
+        Route::patch('/applications/{id}/move-to-round', [AdminController::class, 'moveToFurtherRound'])->name('applications.move-to-round');
         Route::get('/applications/{id}/export/csv', [AdminController::class, 'exportApplicationCsv'])->name('applications.export.csv');
         Route::get('/applications/{id}/export/pdf', [AdminController::class, 'exportApplicationPdf'])->name('applications.export.pdf');
 
         Route::patch('/applications/{id}/accept-payment',   [AdminController::class, 'acceptPayment'])->name('applications.acceptPayment');
         Route::patch('/applications/{id}/revert-payment',   [AdminController::class, 'revertPayment'])->name('applications.revertPayment');
+        Route::post('/applications/{id}/education-attachment', [AdminController::class, 'uploadEducationAttachment'])->name('applications.uploadEducationAttachment');
+        Route::delete('/applications/{id}/education-attachment/{attachmentId}', [AdminController::class, 'deleteEducationAttachment'])->name('applications.deleteEducationAttachment');
         Route::patch('/applications/{id}/accept-education', [AdminController::class, 'acceptEducation'])->name('applications.acceptEducation');
         Route::patch('/applications/{id}/revert-education', [AdminController::class, 'revertEducation'])->name('applications.revertEducation');
 
@@ -103,6 +107,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         Route::middleware(App\Http\Middleware\IsMainAdmin::class)->group(function () {
             Route::get('/rounds', [MainAdminController::class, 'rounds'])->name('rounds');
+            Route::get('/settings', [MainAdminController::class, 'settings'])->name('settings');
+            Route::patch('/settings', [MainAdminController::class, 'updateSettings'])->name('settings.update');
+            Route::get('/audit-logs', [MainAdminController::class, 'auditLogs'])->name('audit-logs');
 
             Route::post('/programs', [MainAdminController::class, 'storeProgram'])->name('programs.store');
             Route::patch('/programs/{studyProgram}', [MainAdminController::class, 'updateProgram'])->name('programs.update');

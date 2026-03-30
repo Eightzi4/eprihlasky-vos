@@ -15,6 +15,7 @@ return new class extends Migration
             $table->string('label')->nullable();
             $table->dateTime('opens_at');
             $table->dateTime('closes_at');
+            $table->dateTime('completion_deadline_at');
             $table->unsignedInteger('max_applicants')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
@@ -23,10 +24,9 @@ return new class extends Migration
         });
 
         Schema::table('applications', function (Blueprint $table) {
-            $table->foreignId('round_id')
-                ->nullable()
-                ->after('study_program_id')
-                ->constrained('application_rounds')
+            $table->foreign('round_id')
+                ->references('id')
+                ->on('application_rounds')
                 ->nullOnDelete();
         });
     }
@@ -35,7 +35,6 @@ return new class extends Migration
     {
         Schema::table('applications', function (Blueprint $table) {
             $table->dropForeign(['round_id']);
-            $table->dropColumn('round_id');
         });
 
         Schema::dropIfExists('application_rounds');

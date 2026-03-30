@@ -29,4 +29,9 @@ class Admin extends Authenticatable
     {
         return (bool) $this->is_main_admin;
     }
+
+    public function auditLogs()
+    {
+        return $this->hasMany(AuditLog::class);
+    }
 }

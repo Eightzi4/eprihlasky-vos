@@ -60,6 +60,8 @@
                             'icon' => 'manage_accounts',
                             'label' => 'Administrátoři',
                         ];
+                        $navItems[] = ['route' => 'admin.settings', 'icon' => 'settings', 'label' => 'Nastavení'];
+                        $navItems[] = ['route' => 'admin.audit-logs', 'icon' => 'history', 'label' => 'Audit log'];
                     }
                 @endphp
 
@@ -100,9 +102,9 @@
                         </div>
                         <div class="absolute inset-0 rounded-xl border border-white/60 border-b-2 border-b-gray-200/50">
                         </div>
-                        <span
-                            class="relative z-10 text-gray-600 font-bold text-xs flex items-center gap-1.5">
-                            <span class="material-symbols-rounded text-[18px] group-hover:text-school-primary group-hover:-translate-x-1 transition-all duration-300">logout</span>
+                        <span class="relative z-10 text-gray-600 font-bold text-xs flex items-center gap-1.5">
+                            <span
+                                class="material-symbols-rounded text-[18px] group-hover:text-school-primary group-hover:-translate-x-1 transition-all duration-300">logout</span>
                             <span class="hidden sm:inline">Odhlásit se</span>
                         </span>
                     </button>

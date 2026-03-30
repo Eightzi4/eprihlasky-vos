@@ -8,6 +8,7 @@
     'options' => [],
     'verified' => false,
     'locked' => false,
+    'niaRequired' => false,
     'rows' => 3,
     'accept' => '.pdf,.jpg,.jpeg,.png',
     'span' => 1,
@@ -15,8 +16,8 @@
 
 @php
     $isLocked = $verified || $locked;
-    $hasValue = !empty($value);
-    $needsNia = $locked && !$verified && !$hasValue;
+    $hasValue = filled($value);
+    $needsNia = $niaRequired && !$verified && !$hasValue;
     $showVerified = $verified && $hasValue;
     $showErrors = !$isLocked;
     $spanClass = $span === 2 ? 'sm:col-span-2' : '';
@@ -62,8 +63,14 @@
             </div>
         @elseif ($type === 'textarea')
             <textarea name="{{ $name }}" rows="{{ $rows }}" placeholder="{{ $placeholder }}"
-                data-autosave="{{ $name }}"
-                class="w-full py-3 px-4 border border-gray-200 rounded-xl bg-white/50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-school-primary focus:border-school-primary transition-all shadow-sm">{{ $value }}</textarea>
+                @if ($isLocked) readonly @endif
+                @if (!$isLocked) data-autosave="{{ $name }}" @endif
+                :class="{
+                    'border-school-warning ring-1 ring-school-warning/30': fieldHasError('{{ $name }}') && !
+                        {{ $isLocked ? 'true' : 'false' }},
+                    'border-gray-200': !fieldHasError('{{ $name }}') || {{ $isLocked ? 'true' : 'false' }}
+                }"
+                class="{{ $baseInput }} appearance-none {{ $paddingCls }} min-h-[120px] resize-none {{ $inputStateCls }}">{{ $value }}</textarea>
         @elseif ($type === 'file')
             @php
                 $isMultiple = str_ends_with($name, '[]');
@@ -164,12 +171,12 @@
 
     @if ($showVerified)
         <p class="text-blue-600 text-xs mt-1.5 ml-1 font-bold flex items-center gap-1">
-            <span class="material-symbols-rounded text-[14px]">verified</span> Ověřeno pomocí NIA ID
+            <span class="material-symbols-rounded text-[14px]">verified</span> Ověřeno pomocí Identity občana
         </p>
     @elseif ($needsNia)
         <div class="flex items-center gap-1 mt-1.5 ml-1 text-school-warning">
             <span class="material-symbols-rounded text-[16px]">error</span>
-            <p class="text-xs font-medium">Nutno vyplnit pomocí NIA</p>
+            <p class="text-xs font-medium">Nutno vyplnit pomocí Identity občana</p>
         </div>
     @elseif ($showErrors)
         @error($name)

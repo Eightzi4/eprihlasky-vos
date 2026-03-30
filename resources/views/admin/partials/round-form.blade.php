@@ -28,7 +28,8 @@
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <span class="material-symbols-rounded text-gray-400 text-[20px]">school</span>
                 </div>
-                <input id="{{ $prefix }}-study_program_id" type="text" value="{{ $lockedStudyProgram->name }}" readonly
+                <input id="{{ $prefix }}-study_program_id" type="text" value="{{ $lockedStudyProgram->name }}"
+                    readonly
                     class="w-full rounded-xl border border-gray-200 shadow-sm bg-gray-50/80 text-gray-500 pl-10 py-3 text-sm cursor-not-allowed">
             </div>
         @else
@@ -57,7 +58,7 @@
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-        @foreach ([['name' => 'academic_year', 'label' => 'Akademický rok', 'icon' => 'calendar_month', 'required' => true], ['name' => 'label', 'label' => 'Označení kola', 'icon' => 'bookmark'], ['name' => 'opens_at', 'label' => 'Otevření', 'icon' => 'event_upcoming', 'type' => 'datetime-local', 'required' => true], ['name' => 'closes_at', 'label' => 'Uzavření', 'icon' => 'event_busy', 'type' => 'datetime-local', 'required' => true], ['name' => 'max_applicants', 'label' => 'Maximální počet uchazečů', 'icon' => 'groups', 'type' => 'number']] as $field)
+        @foreach ([['name' => 'academic_year', 'label' => 'Akademický rok', 'icon' => 'calendar_month', 'required' => true], ['name' => 'label', 'label' => 'Označení kola', 'icon' => 'bookmark'], ['name' => 'opens_at', 'label' => 'Otevření', 'icon' => 'event_upcoming', 'type' => 'datetime-local', 'required' => true], ['name' => 'closes_at', 'label' => 'Uzavření', 'icon' => 'event_busy', 'type' => 'datetime-local', 'required' => true], ['name' => 'completion_deadline_at', 'label' => 'Dokončení přihlášky', 'icon' => 'event_available', 'type' => 'datetime-local', 'required' => true], ['name' => 'max_applicants', 'label' => 'Maximální počet uchazečů', 'icon' => 'groups', 'type' => 'number']] as $field)
             <div class="{{ $field['name'] === 'max_applicants' ? 'md:col-span-2' : '' }}">
                 <label for="{{ $prefix }}-{{ $field['name'] }}"
                     class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">{{ $field['label'] }}</label>

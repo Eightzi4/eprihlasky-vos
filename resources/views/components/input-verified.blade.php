@@ -20,7 +20,7 @@
 
         @if ($verified)
             <p class="text-blue-600 text-xs mt-1.5 ml-1 font-bold flex items-center gap-1 absolute -bottom-6 left-0">
-                <span class="material-symbols-rounded text-[14px]">verified</span> Ověřeno pomocí NIA ID
+                <span class="material-symbols-rounded text-[14px]">verified</span> Ověřeno pomocí Identity občana
             </p>
         @endif
     </div>

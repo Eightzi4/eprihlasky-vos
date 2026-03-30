@@ -42,11 +42,9 @@
                 @php
                     $openRound = $program->openRound();
                     $nextRound = $program->nextRound();
-                    $lastRound = $program->lastRound();
                     $canApply = $openRound && !$openRound->isFull();
 
                     $displayRounds = collect([
-                        $lastRound ? ['round' => $lastRound, 'role' => 'last'] : null,
                         $openRound ? ['round' => $openRound, 'role' => 'current'] : null,
                         $nextRound ? ['round' => $nextRound, 'role' => 'next'] : null,
                     ])
@@ -64,19 +62,18 @@
                             class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent lg:bg-gradient-to-r lg:from-transparent lg:to-black/10">
                         </div>
 
-                        <div class="absolute top-6 left-6 flex flex-wrap gap-2">
-                            <span
-                                class="px-4 py-1.5 bg-white/95 backdrop-blur-md text-sm font-bold text-school-primary rounded-lg shadow-md border border-white/20">
-                                {{ $program->form }}
-                            </span>
-                            <span
-                                class="px-4 py-1.5 bg-gray-900/90 backdrop-blur-md text-sm font-bold text-white rounded-lg shadow-md border border-white/10">
-                                {{ $program->length }}
-                            </span>
-                        </div>
-
                         @if ($nextRound && !$openRound)
-                            <div class="absolute bottom-6 left-6">
+                            <div class="absolute bottom-6 left-6 right-6 flex flex-wrap items-end justify-between gap-3">
+                                <div class="flex flex-wrap gap-2">
+                                    <span
+                                        class="px-4 py-1.5 bg-white/95 backdrop-blur-md text-sm font-bold text-school-primary rounded-lg shadow-md border border-white/20">
+                                        {{ $program->form }}
+                                    </span>
+                                    <span
+                                        class="px-4 py-1.5 bg-gray-900/90 backdrop-blur-md text-sm font-bold text-white rounded-lg shadow-md border border-white/10">
+                                        {{ $program->length }}
+                                    </span>
+                                </div>
                                 <div
                                     class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gray-900/80 backdrop-blur-md shadow-lg">
                                     <span class="material-symbols-rounded text-amber-400 text-[18px]">schedule</span>
@@ -85,11 +82,34 @@
                                 </div>
                             </div>
                         @elseif (!$openRound && !$nextRound)
-                            <div class="absolute bottom-6 left-6">
+                            <div class="absolute bottom-6 left-6 right-6 flex flex-wrap items-end justify-between gap-3">
+                                <div class="flex flex-wrap gap-2">
+                                    <span
+                                        class="px-4 py-1.5 bg-white/95 backdrop-blur-md text-sm font-bold text-school-primary rounded-lg shadow-md border border-white/20">
+                                        {{ $program->form }}
+                                    </span>
+                                    <span
+                                        class="px-4 py-1.5 bg-gray-900/90 backdrop-blur-md text-sm font-bold text-white rounded-lg shadow-md border border-white/10">
+                                        {{ $program->length }}
+                                    </span>
+                                </div>
                                 <div
                                     class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gray-900/70 backdrop-blur-md shadow-lg">
                                     <span class="material-symbols-rounded text-gray-400 text-[18px]">block</span>
                                     <span class="text-white/70 font-bold text-sm">Přijímání uzavřeno</span>
+                                </div>
+                            </div>
+                        @else
+                            <div class="absolute bottom-6 left-6 right-6">
+                                <div class="flex flex-wrap gap-2">
+                                    <span
+                                        class="px-4 py-1.5 bg-white/95 backdrop-blur-md text-sm font-bold text-school-primary rounded-lg shadow-md border border-white/20">
+                                        {{ $program->form }}
+                                    </span>
+                                    <span
+                                        class="px-4 py-1.5 bg-gray-900/90 backdrop-blur-md text-sm font-bold text-white rounded-lg shadow-md border border-white/10">
+                                        {{ $program->length }}
+                                    </span>
                                 </div>
                             </div>
                         @endif
@@ -275,7 +295,8 @@
                                 </div>
                             @endif
 
-                            <a href="https://www.oauh.cz/vyssi-odborna-skola.htm" target="_blank"
+                            <a href="{{ $program->info_url ?: \App\Models\StudyProgram::DEFAULT_INFO_URL }}"
+                                target="_blank" rel="noopener noreferrer"
                                 class="flex items-center justify-center px-6 py-4 rounded-xl text-gray-500 font-semibold hover:text-school-primary hover:bg-white/50 transition-all whitespace-nowrap">
                                 Více informací
                                 <span class="material-symbols-rounded ml-2 text-[20px]">open_in_new</span>

@@ -3,7 +3,13 @@
     'savedFiles' => [],
     'multiple' => false,
     'locked' => false,
+    'required' => false,
+    'requiredMessage' => 'Toto pole je povinné.',
+    'validWhen' => 'false',
     'accept' => '.pdf,.jpg,.jpeg,.png',
+    'uploadUrl' => null,
+    'deleteUrlTemplate' => null,
+    'csrfToken' => null,
 ])
 
 @php
@@ -12,6 +18,7 @@
     $uploadPrompt = $isMultiple
         ? 'Klikněte pro přidání souborů nebo je přetáhněte sem'
         : 'Klikněte pro výběr souboru nebo jej přetáhněte sem';
+    $validationField = $fieldName;
 
     $savedJson = collect($savedFiles)
         ->map(
@@ -29,8 +36,9 @@
 @endphp
 
 <div x-data="{
-    uploadUrl: FILE_UPLOAD_URL,
-    csrfToken: CSRF_TOKEN,
+    uploadUrl: @js($uploadUrl) ?? FILE_UPLOAD_URL,
+    deleteUrlTemplate: @js($deleteUrlTemplate),
+    csrfToken: @js($csrfToken) ?? CSRF_TOKEN,
     fieldName: '{{ $fieldName }}',
     multiple: {{ $isMultiple ? 'true' : 'false' }},
     locked: {{ $locked ? 'true' : 'false' }},
@@ -38,6 +46,14 @@
     isDragging: false,
     isUploading: false,
     uploadError: null,
+
+    syncValidationState() {
+        if (!this.$refs.validationInput) return;
+        const shouldCountAsPresent = this.uploadedFiles.length > 0 || ({{ $validWhen }});
+        this.$refs.validationInput.value = shouldCountAsPresent ? 'present' : '';
+        this.$refs.validationInput.dispatchEvent(new Event('input', { bubbles: true }));
+        this.$refs.validationInput.dispatchEvent(new Event('change', { bubbles: true }));
+    },
 
     async handleFiles(files) {
         if (this.locked) return;
@@ -55,9 +71,16 @@
             fd.append('field_name', this.fieldName);
             fd.append('_token', this.csrfToken);
             try {
-                const res = await fetch(this.uploadUrl, { method: 'POST', body: fd });
+                const res = await fetch(this.uploadUrl, {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json' },
+                    body: fd,
+                });
                 const data = await res.json();
-                if (!res.ok) { this.uploadError = data.message || 'Chyba při nahrávání.'; continue; }
+                if (!res.ok) {
+                    this.uploadError = data.message || 'Chyba při nahrávání.';
+                    continue;
+                }
                 const entry = {
                     attachmentId: data.attachmentId,
                     name: data.filename,
@@ -66,9 +89,16 @@
                     previewUrl: data.mime_type.startsWith('image/') ? data.url : null,
                     url: data.url,
                 };
-                if (!this.multiple) { this.uploadedFiles = [entry]; } else { this.uploadedFiles.push(entry); }
+                if (!this.multiple) {
+                    this.uploadedFiles = [entry];
+                } else {
+                    this.uploadedFiles.push(entry);
+                }
+                this.syncValidationState();
                 window.dispatchEvent(new CustomEvent('file-uploaded'));
-            } catch { this.uploadError = 'Nepodařilo se nahrát soubor. Zkuste to znovu.'; }
+            } catch {
+                this.uploadError = 'Nepodařilo se nahrát soubor. Zkuste to znovu.';
+            }
         }
         this.isUploading = false;
         this.$refs.fileInput.value = '';
@@ -76,18 +106,30 @@
 
     async deleteFile(attachmentId) {
         if (this.locked) return;
-        const url = FILE_DELETE_URL.replace('__ID__', attachmentId);
+        const url = (this.deleteUrlTemplate ?? FILE_DELETE_URL).replace('__ID__', attachmentId);
         try {
-            await fetch(url, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': this.csrfToken, 'Accept': 'application/json' } });
+            const response = await fetch(url, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': this.csrfToken,
+                    'Accept': 'application/json',
+                },
+            });
+            if (!response.ok) {
+                throw new Error('delete failed');
+            }
             this.uploadedFiles = this.uploadedFiles.filter(f => f.attachmentId !== attachmentId);
+            this.syncValidationState();
             window.dispatchEvent(new CustomEvent('file-deleted'));
-        } catch { this.uploadError = 'Soubor se nepodařilo odstranit.'; }
+        } catch {
+            this.uploadError = 'Soubor se nepodařilo odstranit.';
+        }
     },
 
     formatSize(bytes) {
         if (!bytes) return '0 B';
-        const k = 1024,
-            sizes = ['B', 'KB', 'MB', 'GB'];
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
         const i = Math.floor(Math.log(bytes) / Math.log(k));
         return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
     },
@@ -98,11 +140,15 @@
         if (type === 'application/pdf') return 'picture_as_pdf';
         return 'description';
     },
-}" class="space-y-3">
+}" x-init="syncValidationState()" x-effect="syncValidationState()" class="space-y-3">
+    @if ($required && !$locked)
+        <input type="hidden" name="{{ $validationField }}" x-ref="validationInput">
+    @endif
 
     @if (!$locked)
         <div class="relative group cursor-pointer transition-all duration-300"
             x-bind:class="{
+                'border-school-warning ring-1 ring-school-warning/30 rounded-2xl': {{ $required ? "fieldHasError('{$validationField}')" : 'false' }},
                 'bg-red-50/50 border-school-primary ring-2 ring-school-primary/20': isDragging || isUploading,
                 'hover:border-school-primary hover:bg-red-50/30': !isDragging && !isUploading
             }"
@@ -124,7 +170,7 @@
                     x-bind:class="{ 'text-school-primary': isDragging || isUploading }">
                     <span x-show="!isDragging && !isUploading">{{ $uploadPrompt }}</span>
                     <span x-show="isDragging" style="display:none">Pusťte soubory zde</span>
-                    <span x-show="isUploading" style="display:none">Nahrávám…</span>
+                    <span x-show="isUploading" style="display:none">Nahrávám...</span>
                 </p>
                 <p class="text-xs text-gray-400 mt-1">PDF, JPG, PNG (Max 10 MB)</p>
             </div>
@@ -135,6 +181,15 @@
         <span class="material-symbols-rounded text-[16px]">error</span>
         <p class="text-xs font-medium" x-text="uploadError"></p>
     </div>
+
+    @if ($required && !$locked)
+        <template x-if="hasError('{{ $validationField }}') && !uploadError">
+            <div class="flex items-center gap-1 mt-1.5 ml-1 text-school-warning">
+                <span class="material-symbols-rounded text-[16px]">error</span>
+                <p class="text-xs font-medium">{{ $requiredMessage }}</p>
+            </div>
+        </template>
+    @endif
 
     <div class="space-y-2">
         <template x-for="file in uploadedFiles" :key="file.attachmentId">

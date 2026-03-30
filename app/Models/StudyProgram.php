@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class StudyProgram extends Model
 {
+    public const DEFAULT_INFO_URL = 'https://www.oauh.cz/ekonomicko-pravni-cinnost-68-41-n-03.htm';
+
     protected $fillable = [
         'name',
         'code',
@@ -17,6 +19,7 @@ class StudyProgram extends Model
         'tuition_fee',
         'description',
         'image_path',
+        'info_url',
         'is_active',
     ];
 

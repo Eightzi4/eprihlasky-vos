@@ -67,6 +67,8 @@
                                 'opens_at_label' => optional($round->opens_at)->format('j. n. Y H:i'),
                                 'closes_at' => optional($round->closes_at)->format('Y-m-d H:i'),
                                 'closes_at_label' => optional($round->closes_at)->format('j. n. Y H:i'),
+                                'completion_deadline_at' => optional($round->completion_deadline_at)->format('Y-m-d H:i'),
+                                'completion_deadline_at_label' => optional($round->completion_deadline_at)->format('j. n. Y H:i'),
                                 'max_applicants' => $round->max_applicants,
                                 'capacity_label' => $round->max_applicants ? (string) $round->max_applicants : 'Bez limitu',
                                 'status' => $status,
@@ -299,13 +301,16 @@
                                         @endforeach
                                         <th
                                             class="px-5 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                            Dokončení­</th>
+                                        <th
+                                            class="px-5 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                                             Akce</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-50">
                                     <template x-if="sortedRounds.length === 0">
                                         <tr>
-                                            <td colspan="8" class="px-6 py-12 text-center text-gray-400">
+                                            <td colspan="9" class="px-6 py-12 text-center text-gray-400">
                                                 K tomuto programu zatím není přiřazeno žádné přijímací kolo.
                                             </td>
                                         </tr>
@@ -331,6 +336,8 @@
                                                     <span x-text="round.status"></span>
                                                 </span>
                                             </td>
+                                            <td class="px-5 py-4 whitespace-nowrap text-sm text-gray-500"
+                                                x-text="round.completion_deadline_at_label"></td>
                                             <td class="px-5 py-4 whitespace-nowrap">
                                                 <div class="flex items-center gap-2">
                                                     <button type="button" @click="openModal(round.edit_modal)"

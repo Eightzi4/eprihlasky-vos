@@ -22,8 +22,9 @@ const FORMAT_VALIDATORS = {
     birth_number(value) {
         if (!value) return null;
         const stripped = value.replace('/', '');
-        if (!/^\d{9,10}$/.test(stripped))
+        if (!/^\d{9,10}$/.test(stripped)) {
             return 'Rodné číslo nemá správný formát (000101/1234).';
+        }
 
         const yy = parseInt(stripped.substring(0, 2), 10);
         let month = parseInt(stripped.substring(2, 4), 10);
@@ -37,31 +38,42 @@ const FORMAT_VALIDATORS = {
         if (day < 1 || day > 31) return 'Rodné číslo obsahuje neplatný den.';
 
         if (stripped.length === 10) {
-            if (parseInt(stripped, 10) % 11 !== 0)
+            if (parseInt(stripped, 10) % 11 !== 0) {
                 return 'Rodné číslo není platné (chybný kontrolní součet).';
+            }
         }
+
         return null;
     },
     graduation_year(value) {
         if (!value) return null;
         if (!/^\d{4}$/.test(value)) return 'Rok maturity musí být čtyřciferné číslo.';
+
         const y = parseInt(value, 10);
         const maxYear = new Date().getFullYear() + 1;
-        if (y < 1950 || y > maxYear)
-            return `Rok maturity musí být v rozmezí 1950–${maxYear}.`;
+
+        if (y < 1950 || y > maxYear) {
+            return `Rok maturity musí být v rozmezí 1950-${maxYear}.`;
+        }
+
         return null;
     },
     grade_average(value) {
         if (!value) return null;
+
         const n = parseFloat(value.replace(',', '.'));
         if (isNaN(n)) return 'Průměr musí být číslo (např. 1.50).';
         if (n < 1.0 || n > 5.0) return 'Průměr musí být v rozmezí 1,00 až 5,00.';
+
         return null;
+    },
+    half_year_grade_average(value) {
+        return FORMAT_VALIDATORS.grade_average(value);
     },
     izo(value) {
         if (!value) return null;
         return /^\d{6,9}$/.test(value.trim())
-            ? null : 'IZO musí být 6–9 číslic.';
+            ? null : 'IZO musí být 6-9 číslic.';
     },
     previous_study_field_code(value) {
         if (!value) return null;
@@ -71,7 +83,6 @@ const FORMAT_VALIDATORS = {
 };
 
 document.addEventListener('alpine:init', () => {
-
     Alpine.data('stepValidator', (config) => ({
         stepNumber: config.step || 1,
         fields: config.fields || [],
@@ -89,6 +100,9 @@ document.addEventListener('alpine:init', () => {
                 this.$nextTick(() => {
                     const el = document.querySelector(`[name="${field.name}"]`);
                     if (!el || el.readOnly || el.disabled) return;
+
+                    this.touched[field.name] = true;
+                    this.validateField(field);
 
                     const isBinary = el.tagName === 'SELECT'
                         || ['date', 'checkbox', 'file'].includes(el.type);
@@ -183,12 +197,11 @@ document.addEventListener('alpine:init', () => {
         },
 
         fieldHasError(name) { return !!this.errors[name]; },
-        hasError(name) { return !!(this.touched[name] && this.errors[name]); },
+        hasError(name) { return !!this.errors[name]; },
         showServerError(name) {
             return this.serverErrorFields.includes(name) && !this.touched[name];
         },
     }));
-
 });
 
 Alpine.start();

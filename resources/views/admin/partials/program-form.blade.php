@@ -6,17 +6,7 @@
 @endphp
 
 <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-    @foreach ([
-        ['name' => 'name', 'label' => 'Název programu', 'icon' => 'school', 'required' => true],
-        ['name' => 'code', 'label' => 'Kód programu', 'icon' => 'sell'],
-        ['name' => 'degree', 'label' => 'Titul', 'icon' => 'workspace_premium', 'required' => true],
-        ['name' => 'form', 'label' => 'Forma studia', 'icon' => 'view_day', 'required' => true],
-        ['name' => 'length', 'label' => 'Délka studia', 'icon' => 'schedule', 'required' => true],
-        ['name' => 'language', 'label' => 'Jazyk', 'icon' => 'translate', 'required' => true],
-        ['name' => 'location', 'label' => 'Místo studia', 'icon' => 'location_on', 'required' => true],
-        ['name' => 'tuition_fee', 'label' => 'Školné', 'icon' => 'payments'],
-        ['name' => 'image_path', 'label' => 'URL obrázku', 'icon' => 'image', 'span' => 2],
-    ] as $field)
+    @foreach ([['name' => 'name', 'label' => 'Název programu', 'icon' => 'school', 'required' => true], ['name' => 'code', 'label' => 'Kód programu', 'icon' => 'sell'], ['name' => 'degree', 'label' => 'Titul', 'icon' => 'workspace_premium', 'required' => true], ['name' => 'form', 'label' => 'Forma studia', 'icon' => 'view_day', 'required' => true], ['name' => 'length', 'label' => 'Délka studia', 'icon' => 'schedule', 'required' => true], ['name' => 'language', 'label' => 'Jazyk', 'icon' => 'translate', 'required' => true], ['name' => 'location', 'label' => 'Místo studia', 'icon' => 'location_on', 'required' => true], ['name' => 'tuition_fee', 'label' => 'Školné', 'icon' => 'payments'], ['name' => 'image_path', 'label' => 'URL obrázku', 'icon' => 'image', 'span' => 2], ['name' => 'info_url', 'label' => 'URL více informací', 'icon' => 'open_in_new', 'span' => 2, 'required' => true, 'type' => 'url', 'default' => \App\Models\StudyProgram::DEFAULT_INFO_URL]] as $field)
         <div class="{{ ($field['span'] ?? 1) === 2 ? 'md:col-span-2' : '' }}">
             <label for="{{ $prefix }}-{{ $field['name'] }}"
                 class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">{{ $field['label'] }}</label>
@@ -24,8 +14,9 @@
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <span class="material-symbols-rounded text-gray-400 text-[20px]">{{ $field['icon'] }}</span>
                 </div>
-                <input id="{{ $prefix }}-{{ $field['name'] }}" type="text" name="{{ $field['name'] }}"
-                    value="{{ $fieldValue($field['name']) }}" {{ !empty($field['required']) ? 'required' : '' }}
+                <input id="{{ $prefix }}-{{ $field['name'] }}" type="{{ $field['type'] ?? 'text' }}"
+                    name="{{ $field['name'] }}" value="{{ $fieldValue($field['name'], $field['default'] ?? null) }}"
+                    {{ !empty($field['required']) ? 'required' : '' }}
                     class="w-full rounded-xl border border-gray-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-school-primary focus:border-school-primary bg-white/50 pl-10 py-3 text-sm placeholder-gray-400">
             </div>
             @if ($errorsBag->has($field['name']))

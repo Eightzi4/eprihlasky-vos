@@ -12,8 +12,10 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('study_program_id')->constrained('study_programs');
-
-            $table->string('status')->default('draft');
+            $table->unsignedBigInteger('round_id')->nullable();
+            $table->foreignId('application_status_id')->constrained('application_statuses');
+            $table->timestamp('status_changed_at')->nullable();
+            $table->timestamp('status_notified_at')->nullable();
 
             $table->boolean('identity_verified')->default(false);
             $table->boolean('prev_study_info')->default(false);
@@ -22,15 +24,15 @@ return new class extends Migration
             $table->boolean('submitted')->default(false);
 
             $table->boolean('prev_study_info_accepted')->default(false);
+            $table->timestamp('education_accepted_at')->nullable();
+            $table->timestamp('education_notified_at')->nullable();
             $table->boolean('payment_accepted')->default(false);
+            $table->timestamp('payment_accepted_at')->nullable();
+            $table->timestamp('payment_notified_at')->nullable();
 
             $table->string('application_number')->nullable();
             $table->string('evidence_number')->nullable()->unique();
             $table->timestamp('submitted_at')->nullable();
-
-            $table->timestamp('education_locked_at')->nullable();
-            $table->timestamp('payment_locked_at')->nullable();
-            $table->timestamp('deadline_at')->nullable();
 
             $table->string('first_name')->nullable();
             $table->string('last_name')->nullable();
@@ -53,6 +55,9 @@ return new class extends Migration
             $table->string('previous_study_field_code')->nullable();
             $table->string('graduation_year')->nullable();
             $table->decimal('grade_average', 4, 2)->nullable();
+            $table->decimal('half_year_grade_average', 4, 2)->nullable();
+            $table->decimal('maturita_grade_average', 4, 2)->nullable();
+            $table->boolean('bring_maturita_in_person')->default(false);
 
             $table->text('specific_needs')->nullable();
             $table->text('note')->nullable();
@@ -60,6 +65,9 @@ return new class extends Migration
             $table->json('verified_fields')->nullable();
 
             $table->timestamps();
+
+            $table->index(['application_status_id', 'updated_at']);
+            $table->index(['round_id', 'updated_at']);
         });
     }
 

@@ -65,11 +65,15 @@
                             class="material-symbols-rounded {{ $isLocked ? 'text-gray-400' : 'text-school-primary' }} text-[28px] sm:text-[32px]">
                             {{ $isLocked ? 'lock' : 'fingerprint' }}
                         </span>
-                        {{ $isLocked ? 'Sekce uzamčena' : 'Identita občana' }}
+                        {{ $isLocked ? 'Sekce uzamčena' : 'Identita ověřena' }}
                     </h3>
                     <p class="text-gray-600 font-medium leading-relaxed text-base sm:text-lg">
                         @if ($isLocked)
-                            Osobní údaje byly uzamčeny po odeslání přihlášky. Kontaktujte školu pro případné úpravy.
+                            @if ($application->submitted)
+                                Osobní údaje byly uzamčeny po odeslání přihlášky. Kontaktujte školu pro případné úpravy.
+                            @else
+                                Osobní údaje už nelze měnit, protože uplynul termín pro jejich doplnění.
+                            @endif
                         @else
                             Urychlete vyplňování načtením ověřených údajů přímo ze státních registrů.
                         @endif
@@ -87,12 +91,12 @@
                             </div>
                             <span
                                 class="relative z-10 text-gray-900 font-bold text-base sm:text-lg flex items-center drop-shadow-sm whitespace-nowrap">
-                                Načíst přes NIA
+                                Ověřit identitu
                                 <span
                                     class="material-symbols-rounded ml-2 text-[22px] text-gray-600 group-hover/btn:text-school-primary transition-transform duration-300 group-hover/btn:translate-x-1">login</span>
                             </span>
                         </a>
-                        <a href="https://www.youtube.com/watch?v=ztrRu-olFy8" target="_blank"
+                        <a href="https://www.youtube.com/watch?v=5IJwV9EJb0o" target="_blank"
                             class="group/btn relative flex items-center justify-center px-6 py-3 sm:px-8 sm:py-4 rounded-xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer w-full sm:w-auto xl:w-[280px]">
                             <div class="absolute inset-0 topo-bg opacity-30"></div>
                             <div
@@ -114,16 +118,16 @@
 
         <x-form-section title="Identifikační údaje">
             <x-form-field name="first_name" label="Křestní jméno" icon="person" :value="old('first_name', $application->first_name)" placeholder="Jan"
-                :verified="in_array('first_name', $vf)" :locked="true" />
+                :verified="in_array('first_name', $vf)" :locked="true" :nia-required="true" />
             <x-form-field name="last_name" label="Příjmení" icon="badge" :value="old('last_name', $application->last_name)" placeholder="Novák"
-                :verified="in_array('last_name', $vf)" :locked="true" />
+                :verified="in_array('last_name', $vf)" :locked="true" :nia-required="true" />
             <x-form-field name="gender" label="Pohlaví" icon="wc" type="select" :span="2" :options="['' => 'Vyberte pohlaví', 'Muž' => 'Muž', 'Žena' => 'Žena']"
                 :value="old('gender', $application->gender)" :locked="$isLocked" />
         </x-form-section>
 
         <x-form-section title="Narození a občanství">
             <x-form-field name="birth_date" label="Datum narození" icon="calendar_today" type="date" :value="old('birth_date', $application->birth_date?->format('Y-m-d') ?? '')"
-                :verified="in_array('birth_date', $vf)" :locked="true" />
+                :verified="in_array('birth_date', $vf)" :locked="true" :nia-required="true" />
             <x-form-field name="birth_number" label="Rodné číslo" icon="fingerprint" :value="old('birth_number', $application->birth_number)"
                 placeholder="000101/1234" :verified="in_array('birth_number', $vf)" :locked="$isLocked" />
             <x-form-field name="citizenship" label="Státní občanství" icon="flag" type="select" :options="[
@@ -146,11 +150,11 @@
             ]" :value="old('country', $application->country)"
                 :locked="$isLocked" />
             <x-form-field name="city" label="Obec / Město" icon="location_city" :value="old('city', $application->city)"
-                placeholder="Uherské Hradiště" :verified="in_array('city', $vf)" :locked="true" />
+                placeholder="Uherské Hradiště" :verified="in_array('city', $vf)" :locked="true" :nia-required="true" />
             <x-form-field name="street" label="Ulice a číslo popisné" icon="home" :value="old('street', $application->street)"
-                placeholder="Masarykovo náměstí 123" :verified="in_array('street', $vf)" :locked="true" />
+                placeholder="Masarykovo náměstí 123" :verified="in_array('street', $vf)" :locked="true" :nia-required="true" />
             <x-form-field name="zip" label="PSČ" icon="markunread_mailbox" :value="old('zip', $application->zip)" placeholder="686 01"
-                :verified="in_array('zip', $vf)" :locked="true" />
+                :verified="in_array('zip', $vf)" :locked="true" :nia-required="true" />
         </x-form-section>
 
         <x-form-section title="Kontaktní údaje">

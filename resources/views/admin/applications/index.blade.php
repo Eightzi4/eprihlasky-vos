@@ -55,7 +55,7 @@
                             <select x-model="f.checkpoint" @change="f.state = ''"
                                 class="pl-1.5 pr-5 py-0.5 bg-transparent text-gray-700 font-medium text-xs focus:outline-none appearance-none cursor-pointer">
                                 <option value="" disabled>Vyberte krok</option>
-                                <option value="identity_verified">Ověření NIA</option>
+                                <option value="identity_verified">Ověření identity</option>
                                 <option value="step1">Osobní údaje</option>
                                 <option value="gdpr_accepted">Souhlas GDPR</option>
                                 <option value="submitted">Přihláška odeslána</option>
@@ -225,7 +225,7 @@
 
                 checkpointLabel(k) {
                     return {
-                        identity_verified: 'Ověření NIA',
+                        identity_verified: 'Ověření identity',
                         step1: 'Osobní údaje',
                         gdpr_accepted: 'Souhlas GDPR',
                         submitted: 'Přihláška odeslána',
@@ -287,7 +287,7 @@
                 dotsFor(app) {
                     return [{
                             key: 'identity_verified',
-                            label: 'Ověření NIA'
+                            label: 'Ověření Identity'
                         },
                         {
                             key: 'step1',

@@ -77,7 +77,7 @@
         </div>
     </header>
 
-    <main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
+    <main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10" x-data="{ statusLegendOpen: false }">
 
         @php
             $statusIcon = [
@@ -85,23 +85,26 @@
                 'incomplete' => ['icon' => 'error', 'cls' => 'text-orange-500'],
                 'locked' => ['icon' => 'lock', 'cls' => 'text-gray-400'],
                 'pending' => ['icon' => 'pending', 'cls' => 'text-blue-400'],
+                'failed' => ['icon' => 'cancel', 'cls' => 'text-school-primary'],
             ];
             $labelCls = [
                 'complete' => 'text-gray-900',
                 'incomplete' => 'text-gray-500',
                 'locked' => 'text-gray-400',
                 'pending' => 'text-gray-700',
+                'failed' => 'text-red-700',
             ];
-            $s1 = $application->step1Status();
-            $s2 = $application->step2Status();
-            $ps = $application->paymentStatus();
-            $step1Locked = $application->isStep1Locked();
-            $niaStatus = $step1Locked ? 'locked' : ($application->identity_verified ? 'complete' : 'incomplete');
-            $gdprStatus = $step1Locked ? 'locked' : ($application->gdpr_accepted ? 'complete' : 'incomplete');
-            $submittedStatus = $application->submitted ? 'complete' : 'incomplete';
-            $deadline1 = $application->deadline_at ?? \Carbon\Carbon::parse('2026-03-28');
-            $deadline2 = $application->education_locked_at ?? \Carbon\Carbon::parse('2026-05-04');
-            $fmtDate = fn($dt) => $dt->format('j. n. Y');
+            $panel = $application->statusPanelData();
+            $s1 = $panel['s1'];
+            $s2 = $panel['s2'];
+            $ps = $panel['ps'];
+            $niaStatus = $panel['nia'];
+            $gdprStatus = $panel['gdpr'];
+            $submittedStatus = $panel['submitted'];
+            $finalStatus = $panel['finalStatus'];
+            $deadline1 = $application->submissionDeadlineAt();
+            $deadline2 = $application->completionDeadlineAt();
+            $fmtDate = fn($dt) => $dt?->format('j. n. Y') ?? '—';
         @endphp
 
         <div class="lg:hidden space-y-4 mb-6">
@@ -123,7 +126,8 @@
                     </div>
                     <div>
                         <p class="text-gray-400 mb-0.5">Forma studia</p>
-                        <p class="font-semibold text-gray-900">{{ $application->studyProgram->form ?? 'Prezenční' }}</p>
+                        <p class="font-semibold text-gray-900">{{ $application->studyProgram->form ?? 'Prezenční' }}
+                        </p>
                     </div>
                     <div>
                         <p class="text-gray-400 mb-0.5">Školné</p>
@@ -134,21 +138,44 @@
 
             <div
                 class="bg-white/80 backdrop-blur-xl rounded-2xl shadow-sm border border-white/60 p-5 ring-1 ring-black/5">
-                <h3 class="font-bold text-gray-900 mb-4 flex items-center gap-2 text-sm">
-                    <span class="material-symbols-rounded text-gray-400 text-[18px]">rule</span>
-                    Stav přihlášky
-                </h3>
+                <p class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Evidenční číslo</p>
+                <p class="text-base font-bold text-school-primary">
+                    {{ $application->evidence_number ?? 'Zatím nebylo přiděleno' }}</p>
+            </div>
+
+            <div
+                class="bg-white/80 backdrop-blur-xl rounded-2xl shadow-sm border border-white/60 p-5 ring-1 ring-black/5">
+                <div class="mb-4 flex items-center justify-between gap-3">
+                    <h3 class="font-bold text-gray-900 flex items-center gap-2 text-sm">
+                        <span class="material-symbols-rounded text-gray-400 text-[18px]">rule</span>
+                        Stav přihlášky
+                    </h3>
+                    <button type="button" @click="statusLegendOpen = true"
+                        class="inline-flex h-8 w-8 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+                        aria-label="Vysvětlení stavů přihlášky">
+                        <span class="material-symbols-rounded text-[18px]">help</span>
+                    </button>
+                </div>
 
                 <p class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">do {{ $fmtDate($deadline1) }}
                 </p>
                 <div class="grid grid-cols-2 gap-x-6 gap-y-2 text-xs font-medium mb-3">
-                    @foreach ([[$s1, 'Osobní údaje', false], [$niaStatus, 'Ověření identity', true], [$gdprStatus, 'Souhlas s GDPR', false], [$submittedStatus, 'Přihláška odeslána', false]] as [$st, $lb, $indent])
+                    @foreach ([[$s1, 'Osobní údaje', false], [$niaStatus, 'Ověření identity', true], [$gdprStatus, 'Souhlas s GDPR', false]] as [$st, $lb, $indent])
                         <div class="flex items-center gap-2 {{ $indent ? 'pl-5' : '' }}">
                             <span
                                 class="material-symbols-rounded {{ $statusIcon[$st]['cls'] }} text-[16px] flex-shrink-0">{{ $statusIcon[$st]['icon'] }}</span>
                             <span class="{{ $labelCls[$st] }}">{{ $lb }}</span>
                         </div>
                     @endforeach
+                </div>
+
+                <div
+                    class="mt-3 pt-3 border-t border-dashed border-gray-200 flex items-center gap-2 text-xs font-medium mb-3">
+                    <span
+                        class="material-symbols-rounded {{ $statusIcon[$submittedStatus]['cls'] }} text-[16px] flex-shrink-0">{{ $statusIcon[$submittedStatus]['icon'] }}</span>
+                    <span
+                        class="{{ $submittedStatus === 'complete' ? 'text-gray-900 font-bold' : $labelCls[$submittedStatus] }}">Přihláška
+                        odeslána</span>
                 </div>
 
                 <div class="border-t border-dashed border-gray-200 my-3"></div>
@@ -164,6 +191,16 @@
                         </div>
                     @endforeach
                 </div>
+
+                @if ($finalStatus)
+                    <div
+                        class="mt-4 pt-4 border-t border-dashed border-gray-200 flex items-center gap-2 text-xs font-medium">
+                        <span
+                            class="material-symbols-rounded text-[16px] flex-shrink-0 {{ $finalStatus['tone'] === 'success' ? 'text-amber-500' : 'text-school-primary' }}">{{ $finalStatus['icon'] }}</span>
+                        <span
+                            class="{{ $finalStatus['tone'] === 'success' ? 'text-gray-900 font-bold' : 'text-red-700' }}">{{ $finalStatus['label'] }}</span>
+                    </div>
+                @endif
             </div>
         </div>
 
@@ -208,20 +245,13 @@
                     </div>
                 </div>
 
-                @php
-                    $step1Locked = $application->isStep1Locked();
-                    $niaStatus = $step1Locked
-                        ? 'locked'
-                        : ($application->identity_verified
-                            ? 'complete'
-                            : 'incomplete');
-                    $gdprStatus = $step1Locked ? 'locked' : ($application->gdpr_accepted ? 'complete' : 'incomplete');
-                    $submittedStatus = $application->submitted ? 'complete' : 'incomplete';
+                <div
+                    class="bg-white/80 backdrop-blur-xl rounded-2xl shadow-sm border border-white/60 p-6 ring-1 ring-black/5">
+                    <p class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Evidenční číslo</p>
+                    <p class="text-lg font-bold text-school-primary">
+                        {{ $application->evidence_number ?? 'Zatím nebylo přiděleno' }}</p>
+                </div>
 
-                    $deadline1 = $application->deadline_at ?? \Carbon\Carbon::parse('2026-03-28');
-                    $deadline2 = $application->education_locked_at ?? \Carbon\Carbon::parse('2026-05-04');
-                    $fmtDate = fn($dt) => $dt->format('j. n. Y');
-                @endphp
 
                 <div class="bg-white/80 backdrop-blur-xl rounded-2xl shadow-sm border border-white/60 p-6 ring-1 ring-black/5"
                     x-data="statusPanel({
@@ -231,12 +261,20 @@
                         nia: '{{ $niaStatus }}',
                         gdpr: '{{ $gdprStatus }}',
                         submitted: '{{ $submittedStatus }}',
-                        canSubmit: {{ $application->isStep1Complete() && $application->gdpr_accepted && !$application->submitted ? 'true' : 'false' }}
+                        canSubmit: {{ $panel['canSubmit'] ? 'true' : 'false' }},
+                        finalStatus: @js($finalStatus)
                     })" x-init="init()">
-                    <h3 class="font-bold text-gray-900 mb-5 flex items-center gap-2">
-                        <span class="material-symbols-rounded text-gray-400 text-[20px]">rule</span>
-                        Stav přihlášky
-                    </h3>
+                    <div class="mb-5 flex items-center justify-between gap-3">
+                        <h3 class="font-bold text-gray-900 flex items-center gap-2">
+                            <span class="material-symbols-rounded text-gray-400 text-[20px]">rule</span>
+                            Stav přihlášky
+                        </h3>
+                        <button type="button" @click="statusLegendOpen = true"
+                            class="inline-flex h-8 w-8 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+                            aria-label="Vysvětlení stavů přihlášky">
+                            <span class="material-symbols-rounded text-[18px]">help</span>
+                        </button>
+                    </div>
 
                     <p class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">
                         do {{ $fmtDate($deadline1) }}
@@ -264,7 +302,7 @@
                         </li>
                     </ul>
 
-                    <div class="mt-3 pt-3 border-t border-gray-100 flex items-center gap-3">
+                    <div class="mt-3 pt-3 border-t border-dashed border-gray-200 flex items-center gap-3">
                         <span class="material-symbols-rounded text-[20px] flex-shrink-0 transition-colors duration-300"
                             :class="icon(submitted).cls" x-text="icon(submitted).icon"></span>
                         <span class="text-sm transition-colors duration-300"
@@ -295,8 +333,82 @@
                                 zaplacena</span>
                         </li>
                     </ul>
+
+                    <template x-if="finalStatus">
+                        <div class="mt-4 pt-4 border-t border-dashed border-gray-200 flex items-center gap-3">
+                            <span class="material-symbols-rounded text-[20px] flex-shrink-0"
+                                :class="finalStatusIconCls()" x-text="finalStatus.icon"></span>
+                            <span class="text-sm transition-colors duration-300" :class="finalStatusLabelCls()"
+                                x-text="finalStatus.label"></span>
+                        </div>
+                    </template>
                 </div>
 
+            </div>
+        </div>
+
+        <div x-show="statusLegendOpen" x-transition.opacity
+            class="fixed inset-0 z-[70] flex items-center justify-center px-4 py-6" style="display: none;">
+            <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm" @click="statusLegendOpen = false"></div>
+            <div
+                class="relative w-full max-w-lg bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/60 ring-1 ring-black/5 overflow-hidden">
+                <div class="flex items-start justify-between gap-4 px-6 py-5 border-b border-gray-100">
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-900">Vysvětlení stavů</h3>
+                        <p class="text-sm text-gray-500 mt-1">Co znamenají ikony ve stavovém panelu přihlášky.</p>
+                    </div>
+                    <button type="button" @click="statusLegendOpen = false"
+                        class="inline-flex h-9 w-9 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+                        aria-label="Zavřít">
+                        <span class="material-symbols-rounded text-[20px]">close</span>
+                    </button>
+                </div>
+                <div class="px-6 py-5 space-y-4">
+                    <div class="flex items-start gap-3">
+                        <span class="material-symbols-rounded text-green-500 text-[20px]">check_circle</span>
+                        <div>
+                            <p class="font-bold text-sm text-gray-900">Splněno</p>
+                            <p class="text-sm text-gray-500">Část přihlášky je vyplněná nebo potvrzená.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <span class="material-symbols-rounded text-blue-400 text-[20px]">pending</span>
+                        <div>
+                            <p class="font-bold text-sm text-gray-900">Čeká na školu</p>
+                            <p class="text-sm text-gray-500">Údaje nebo příloha jsou doplněné a čekají na kontrolu
+                                školy.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <span class="material-symbols-rounded text-orange-500 text-[20px]">error</span>
+                        <div>
+                            <p class="font-bold text-sm text-gray-900">Je potřeba doplnit</p>
+                            <p class="text-sm text-gray-500">Tato část ještě není hotová a můžete ji doplnit.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <span class="material-symbols-rounded text-gray-400 text-[20px]">lock</span>
+                        <div>
+                            <p class="font-bold text-sm text-gray-900">Uzamčeno</p>
+                            <p class="text-sm text-gray-500">Sekci už není možné upravovat.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <span class="material-symbols-rounded text-school-primary text-[20px]">cancel</span>
+                        <div>
+                            <p class="font-bold text-sm text-gray-900">Nesplněno po termínu</p>
+                            <p class="text-sm text-gray-500">Termín uplynul a část přihlášky nebyla dokončena včas.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <span class="material-symbols-rounded text-amber-500 text-[20px]">verified</span>
+                        <div>
+                            <p class="font-bold text-sm text-gray-900">Přihláška dokončena včas</p>
+                            <p class="text-sm text-gray-500">Všechny povinné části z vaší strany byly doplněny do
+                                termínu.</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </main>
@@ -323,7 +435,7 @@
                     cls: 'text-gray-400'
                 },
                 saved: {
-                    text: 'Uloženo ✓',
+                    text: 'Uloženo',
                     cls: 'text-green-600'
                 },
                 error: {
@@ -401,6 +513,7 @@
                 gdpr: initial.gdpr,
                 submitted: initial.submitted,
                 canSubmit: initial.canSubmit,
+                finalStatus: initial.finalStatus,
 
                 icons: {
                     complete: {
@@ -419,12 +532,17 @@
                         icon: 'pending',
                         cls: 'text-blue-400'
                     },
+                    failed: {
+                        icon: 'cancel',
+                        cls: 'text-school-primary'
+                    },
                 },
                 labels: {
                     complete: 'text-gray-900',
                     incomplete: 'text-gray-500',
                     locked: 'text-gray-400',
                     pending: 'text-gray-700',
+                    failed: 'text-red-700',
                 },
 
                 icon(status) {
@@ -432,6 +550,16 @@
                 },
                 lbl(status) {
                     return this.labels[status] || this.labels.incomplete;
+                },
+
+                finalStatusIconCls() {
+                    return this.finalStatus?.tone === 'success' ? 'text-amber-500' :
+                        'text-school-primary';
+                },
+
+                finalStatusLabelCls() {
+                    return this.finalStatus?.tone === 'success' ? 'text-gray-900 font-bold' :
+                        'text-red-700';
                 },
 
                 async refresh() {
@@ -450,6 +578,7 @@
                         this.gdpr = data.gdpr;
                         this.submitted = data.submitted;
                         this.canSubmit = data.canSubmit;
+                        this.finalStatus = data.finalStatus;
 
                         window.dispatchEvent(new CustomEvent('status-updated', {
                             detail: data

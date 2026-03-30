@@ -3,9 +3,10 @@
 @section('form-content')
     @php
         $maturitaFile = $application->attachments->where('type', 'maturita')->first();
+        $halfYearReportFile = $application->attachments->where('type', 'half_year_report')->first();
         $otherFiles = $application->attachments->where('type', 'other');
         $paymentFile = $application->attachments->where('type', 'payment')->first();
-        $canSubmit = $application->isStep1Complete() && $application->gdpr_accepted && !$application->submitted;
+        $canSubmit = $application->canSubmit();
         $editBtn = fn(string $step) => route('application.' . $step, $application->id);
     @endphp
 
@@ -16,6 +17,12 @@
             'title' => 'Osobní a kontaktní údaje',
             'editRoute' => $editBtn('step1'),
             'locked' => false,
+            'readOnly' => $application->isStep1Locked(),
+            'readOnlyLabel' => $application->submitted ? 'Odesláno' : 'Sekce uzamčena',
+            'readOnlyIcon' => $application->submitted ? 'task_alt' : 'lock',
+            'readOnlyClasses' => $application->submitted
+                ? 'bg-blue-50 border-blue-200 text-blue-700'
+                : 'bg-gray-50 border-gray-200 text-gray-600',
             'rows' => [
                 [
                     'label' => 'Jméno a příjmení',
@@ -50,6 +57,7 @@
             ],
             'file' => null,
             'fileLabel' => null,
+            'fileGroups' => [],
             'otherFiles' => collect(),
         ])
 
@@ -57,6 +65,10 @@
             'title' => 'Předchozí vzdělání',
             'editRoute' => $editBtn('step2'),
             'locked' => $application->prev_study_info_accepted,
+            'readOnly' => $application->isStep2Locked() && !$application->prev_study_info_accepted,
+            'readOnlyLabel' => 'Po termínu uzamčeno',
+            'readOnlyIcon' => 'event_busy',
+            'readOnlyClasses' => 'bg-gray-50 border-gray-200 text-gray-600',
             'rows' => array_filter([
                 ['label' => 'Název střední školy', 'value' => $application->previous_school, 'span' => 2],
                 ['label' => 'IZO školy', 'value' => $application->izo, 'mono' => true],
@@ -70,12 +82,46 @@
                 $application->graduation_year
                     ? ['label' => 'Rok maturity', 'value' => $application->graduation_year]
                     : null,
-                $application->grade_average
-                    ? ['label' => 'Průměr známek', 'value' => $application->grade_average]
-                    : null,
+                [
+                    'label' => 'Maturitní vysvědčení přinesu osobně',
+                    'value' => $application->bring_maturita_in_person ? 'Ano' : 'Ne',
+                ],
             ]),
-            'file' => $maturitaFile,
-            'fileLabel' => 'Maturitní vysvědčení',
+            'file' => null,
+            'fileLabel' => null,
+            'fileGroups' => [
+                [
+                    'label' => 'Vysvědčení 4. ročník',
+                    'rows' => [
+                        [
+                            'label' => 'Průměr známek za první pololetí',
+                            'value' => $application->half_year_grade_average ?: '—',
+                        ],
+                        [
+                            'label' => 'Průměr známek za druhé pololetí',
+                            'value' => $application->grade_average ?: '—',
+                        ],
+                    ],
+                    'file' => $halfYearReportFile,
+                ],
+                [
+                    'label' => 'Notářsky ověřené maturitní vysvědčení',
+                    'rows' => [
+                        [
+                            'label' => 'Průměr známek z maturitního vysvědčení',
+                            'value' => $application->maturita_grade_average ?: '—',
+                        ],
+                    ],
+                    'file' => $maturitaFile,
+                    'emptyState' => $application->bring_maturita_in_person
+                        ? 'Dokument přinesete do školy osobně.'
+                        : 'Zatím nenahráno',
+                    'emptyStateIcon' => $application->bring_maturita_in_person ? 'inventory_2' : 'warning',
+                    'emptyStateClass' => $application->bring_maturita_in_person
+                        ? 'text-blue-700 bg-blue-50 border-blue-100'
+                        : 'text-orange-700 bg-orange-50 border-orange-100',
+                ],
+            ],
             'otherFiles' => collect(),
         ])
 
@@ -83,19 +129,28 @@
             'title' => 'Doplňující informace',
             'editRoute' => $editBtn('step3'),
             'locked' => false,
+            'readOnly' => $application->isStep3Locked(),
+            'readOnlyLabel' => 'Po termínu uzamčeno',
+            'readOnlyIcon' => 'event_busy',
+            'readOnlyClasses' => 'bg-gray-50 border-gray-200 text-gray-600',
             'rows' => [
                 ['label' => 'Specifické potřeby', 'value' => $application->specific_needs ?: 'Neuvedeno'],
                 ['label' => 'Poznámka', 'value' => $application->note ?: 'Bez poznámky'],
             ],
             'file' => null,
             'fileLabel' => null,
+            'fileGroups' => [],
             'otherFiles' => $otherFiles,
         ])
 
         @include('application.summary._section', [
-            'title' => 'Platba zápisného',
+            'title' => 'Platba přihlášky',
             'editRoute' => $editBtn('step4'),
             'locked' => $application->payment_accepted,
+            'readOnly' => $application->isPaymentSectionLocked() && !$application->payment_accepted,
+            'readOnlyLabel' => 'Po termínu uzamčeno',
+            'readOnlyIcon' => 'event_busy',
+            'readOnlyClasses' => 'bg-gray-50 border-gray-200 text-gray-600',
             'rows' => [
                 [
                     'label' => 'Stav platby',
@@ -108,6 +163,7 @@
             ],
             'file' => $paymentFile,
             'fileLabel' => 'Potvrzení o platbě',
+            'fileGroups' => [],
             'otherFiles' => collect(),
         ])
 
@@ -127,8 +183,8 @@
                     <div class="text-sm text-gray-700 leading-relaxed">
                         <span class="font-bold text-gray-900 block mb-1">Potvrzuji správnost a pravdivost údajů</span>
                         Prohlašuji, že všechny uvedené údaje v této přihlášce jsou pravdivé a úplné. Jsem si vědom(a)
-                        právních
-                        následků uvedení nepravdivých údajů. Souhlasím se zpracováním osobních údajů pro účely přijímacího
+                        právních následků uvedení nepravdivých údajů. Souhlasím se zpracováním osobních údajů pro účely
+                        přijímacího
                         řízení v souladu s GDPR.
                     </div>
                 </label>

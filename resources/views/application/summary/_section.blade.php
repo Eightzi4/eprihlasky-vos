@@ -1,8 +1,13 @@
 @php
     $file = $file ?? null;
     $fileLabel = $fileLabel ?? null;
+    $fileGroups = collect($fileGroups ?? []);
     $otherFiles = $otherFiles ?? collect();
     $locked = $locked ?? false;
+    $readOnly = $readOnly ?? false;
+    $readOnlyLabel = $readOnlyLabel ?? 'Sekce uzamčena';
+    $readOnlyIcon = $readOnlyIcon ?? 'lock';
+    $readOnlyClasses = $readOnlyClasses ?? 'bg-gray-50 border-gray-200 text-gray-600';
 @endphp
 
 <div
@@ -14,6 +19,12 @@
                 class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-green-50 border border-green-200 text-green-700 text-xs font-bold flex-shrink-0 ml-4">
                 <span class="material-symbols-rounded text-[15px]">verified</span>
                 Uznáno školou
+            </span>
+        @elseif ($readOnly)
+            <span
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold flex-shrink-0 ml-4 {{ $readOnlyClasses }}">
+                <span class="material-symbols-rounded text-[15px]">{{ $readOnlyIcon }}</span>
+                {{ $readOnlyLabel }}
             </span>
         @else
             <a href="{{ $editRoute }}"
@@ -49,31 +60,64 @@
             @endif
         @endforeach
 
-        @if ($file)
-            <div class="sm:col-span-2">
-                <p class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">{{ $fileLabel }}</p>
-                <a href="{{ asset('storage/' . $file->disk_path) }}" target="_blank"
-                    class="inline-flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-xl hover:shadow-md transition-all group/file">
-                    @if (str_starts_with($file->mime_type, 'image/'))
-                        <div
-                            class="h-10 w-10 rounded-lg overflow-hidden border border-gray-100 bg-gray-100 flex-shrink-0">
-                            <img src="{{ asset('storage/' . $file->disk_path) }}" class="w-full h-full object-cover">
-                        </div>
-                    @else
-                        <div
-                            class="h-10 w-10 bg-green-50 rounded-lg flex items-center justify-center text-green-600 border border-green-100 flex-shrink-0">
-                            <span class="material-symbols-rounded">description</span>
-                        </div>
-                    @endif
-                    <div class="min-w-0">
-                        <p
-                            class="text-sm font-bold text-gray-900 truncate group-hover/file:text-school-primary transition-colors">
-                            {{ $file->filename }}
+        @if ($fileGroups->isEmpty() && $file)
+            @php
+                $fileGroups = collect([['label' => $fileLabel, 'file' => $file]]);
+            @endphp
+        @endif
+
+        @if ($fileGroups->isNotEmpty())
+            <div class="sm:col-span-2 grid grid-cols-1 lg:grid-cols-2 gap-4">
+                @foreach ($fileGroups as $group)
+                    <div class="rounded-2xl border border-gray-200 bg-white/70 p-4 h-full flex flex-col">
+                        <p class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">{{ $group['label'] }}
                         </p>
-                        <p class="text-xs text-gray-500">{{ round($file->size / 1024) }} KB &bull; Klikněte pro
-                            zobrazení</p>
+                        @if (!empty($group['rows']))
+                            <div class="space-y-3 mb-4 flex-1">
+                                @foreach ($group['rows'] as $groupRow)
+                                    <div>
+                                        <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wide mb-1">
+                                            {{ $groupRow['label'] }}</p>
+                                        <p class="text-sm font-semibold text-gray-900">{{ $groupRow['value'] }}</p>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
+                        @if (!empty($group['file']))
+                            <a href="{{ asset('storage/' . $group['file']->disk_path) }}" target="_blank"
+                                class="inline-flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-xl hover:shadow-md transition-all group/file w-full mt-auto">
+                                @if (str_starts_with($group['file']->mime_type, 'image/'))
+                                    <div
+                                        class="h-10 w-10 rounded-lg overflow-hidden border border-gray-100 bg-gray-100 flex-shrink-0">
+                                        <img src="{{ asset('storage/' . $group['file']->disk_path) }}"
+                                            class="w-full h-full object-cover">
+                                    </div>
+                                @else
+                                    <div
+                                        class="h-10 w-10 bg-green-50 rounded-lg flex items-center justify-center text-green-600 border border-green-100 flex-shrink-0">
+                                        <span class="material-symbols-rounded">description</span>
+                                    </div>
+                                @endif
+                                <div class="min-w-0">
+                                    <p
+                                        class="text-sm font-bold text-gray-900 truncate group-hover/file:text-school-primary transition-colors">
+                                        {{ $group['file']->filename }}
+                                    </p>
+                                    <p class="text-xs text-gray-500">{{ round($group['file']->size / 1024) }} KB &bull;
+                                        Klikněte pro
+                                        zobrazení</p>
+                                </div>
+                            </a>
+                        @else
+                            <div
+                                class="inline-flex items-center gap-2 {{ !empty($group['emptyStateClass']) ? $group['emptyStateClass'] : 'text-orange-700 bg-orange-50 border-orange-100' }} px-4 py-2 rounded-xl border text-sm font-bold mt-auto">
+                                <span
+                                    class="material-symbols-rounded text-[18px]">{{ $group['emptyStateIcon'] ?? 'warning' }}</span>
+                                {{ $group['emptyState'] ?? 'Zatím nenahráno' }}
+                            </div>
+                        @endif
                     </div>
-                </a>
+                @endforeach
             </div>
         @endif
 

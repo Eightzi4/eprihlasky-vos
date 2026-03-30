@@ -28,7 +28,7 @@
             class="bg-white/80 backdrop-blur-xl rounded-3xl shadow-sm border border-white/60 overflow-hidden ring-1 ring-black/5 mb-8">
             <div class="px-8 py-5 border-b border-gray-100/80 bg-white/40 flex items-center gap-3">
                 <div class="h-8 w-8 rounded-lg bg-red-50 flex items-center justify-center flex-shrink-0">
-                    <span class="material-symbols-rounded text-school-primary text-[20px]">person</span>
+                    <span class="material-symbols-rounded text-school-primary text-[20px]">manage_accounts</span>
                 </div>
                 <h2 class="font-bold text-gray-800 text-lg">Osobní údaje a nastavení</h2>
             </div>

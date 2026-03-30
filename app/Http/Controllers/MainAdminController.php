@@ -5,6 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Admin;
 use App\Models\ApplicationRound;
 use App\Models\StudyProgram;
+use App\Models\AuditActionType;
+use App\Models\AuditLog;
+use App\Models\WebsiteSetting;
+use App\Support\AuditLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -25,6 +29,49 @@ class MainAdminController extends Controller
             ->get();
 
         return view('admin.rounds', compact('programs'));
+    }
+
+    public function settings()
+    {
+        $settings = WebsiteSetting::current();
+
+        return view('admin.settings', compact('settings'));
+    }
+
+    public function auditLogs(Request $request)
+    {
+        AuditLogger::log($request, AuditActionType::VIEW, null, AuditLog::DESCRIPTION_VIEW_AUDIT_LOG);
+
+        $logs = AuditLog::query()
+            ->with(['admin', 'actionType', 'application'])
+            ->orderByDesc('created_at')
+            ->paginate(20)
+            ->withQueryString();
+
+        return view('admin.audit-logs', compact('logs'));
+    }
+
+    public function updateSettings(Request $request): RedirectResponse
+    {
+        $settings = WebsiteSetting::current();
+
+        $validated = $request->validate([
+            'application_fee' => ['required', 'integer', 'min:0', 'max:999999'],
+            'notification_email' => ['required', 'email', 'max:255'],
+            'bank_account' => ['required', 'string', 'max:255'],
+            'variable_symbol' => ['required', 'string', 'max:50'],
+            'applicant_notification_delay_minutes' => ['required', 'integer', 'min:0', 'max:10080'],
+        ], [], [
+            'application_fee' => 'cena přihlášky',
+            'notification_email' => 'notifikační e-mail',
+            'bank_account' => 'číslo účtu',
+            'variable_symbol' => 'variabilní symbol',
+            'applicant_notification_delay_minutes' => 'prodleva notifikace uchazeči',
+        ]);
+
+        $settings->update($validated);
+
+        return redirect()->route('admin.settings')->with('success', 'Nastavení webu bylo uloženo.');
     }
 
     public function storeProgram(Request $request): RedirectResponse
@@ -211,6 +258,7 @@ class MainAdminController extends Controller
             'tuition_fee' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'image_path' => ['nullable', 'string', 'max:2048'],
+            'info_url' => ['required', 'url', 'max:2048'],
             'is_active' => ['nullable', 'boolean'],
         ];
     }
@@ -228,6 +276,7 @@ class MainAdminController extends Controller
             'tuition_fee' => 'školné',
             'description' => 'popis programu',
             'image_path' => 'obrázek programu',
+            'info_url' => 'odkaz na více informací',
         ];
     }
 
@@ -252,6 +301,7 @@ class MainAdminController extends Controller
             'label' => ['nullable', 'string', 'max:255'],
             'opens_at' => ['required', 'date'],
             'closes_at' => ['required', 'date', 'after:opens_at'],
+            'completion_deadline_at' => ['required', 'date', 'after_or_equal:closes_at'],
             'max_applicants' => ['nullable', 'integer', 'min:1'],
             'is_active' => ['nullable', 'boolean'],
         ];

@@ -13,7 +13,7 @@
     </x-form-section>
 
     <x-form-section title="Poznámka k přihlášce"
-        description="Prostor pro jakékoliv další informace, které nám chcete sdělit.">
+        description="Prostor pro jakékoliv další informace, které nám chcete sdělit (např. adresa pro zaslání výsledků přijímacího řízení, pokud se neshoduje s adresou trvalého bydliště).">
         <x-form-field name="note" type="textarea" label="" :span="2" placeholder="Vaše poznámka..."
             :value="old('note', $application->note)" :locked="$isLocked" />
     </x-form-section>

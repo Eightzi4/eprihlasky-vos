@@ -13,13 +13,15 @@ class ApplicationRound extends Model
         'label',
         'opens_at',
         'closes_at',
+        'completion_deadline_at',
         'max_applicants',
         'is_active',
     ];
 
     protected $casts = [
-        'opens_at'  => 'datetime',
+        'opens_at' => 'datetime',
         'closes_at' => 'datetime',
+        'completion_deadline_at' => 'datetime',
         'is_active' => 'boolean',
     ];
 
