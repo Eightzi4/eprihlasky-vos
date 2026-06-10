@@ -13,7 +13,7 @@
 
     <div class="space-y-8">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            @foreach ([['label' => 'Studijní programy', 'value' => $programs->count(), 'icon' => 'school'], ['label' => 'Přijímací kola', 'value' => $programs->sum('application_rounds_count'), 'icon' => 'event'], ['label' => 'Aktivní programy', 'value' => $programs->where('is_active', true)->count(), 'icon' => 'visibility']] as $stat)
+            @foreach ([['label' => 'Studijní programy', 'value' => $programs->count(), 'icon' => 'school'], ['label' => 'Letošní přijímací kola', 'value' => $programs->sum('application_rounds_count'), 'icon' => 'event'], ['label' => 'Aktivní programy', 'value' => $programs->where('is_active', true)->count(), 'icon' => 'visibility']] as $stat)
                 <div
                     class="bg-white/80 backdrop-blur-xl rounded-2xl shadow-sm border border-white/60 ring-1 ring-black/5 p-5">
                     <div class="flex items-center justify-between mb-3">
@@ -26,19 +26,10 @@
         </div>
 
         <div class="flex justify-center">
-            <button type="button" onclick="openModal('create-program')"
-                class="group relative flex items-center justify-center px-10 py-4 rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer min-w-[320px]">
-                <div class="absolute inset-0 topo-bg opacity-50 transition-opacity duration-300"></div>
-                <div
-                    class="absolute inset-0 bg-white/60 backdrop-blur-[2px] group-hover:backdrop-blur-[4px] transition-all duration-300">
-                </div>
-                <div class="absolute inset-0 rounded-2xl border border-white/60 border-b-4 border-b-gray-200/50"></div>
-                <span class="relative z-10 text-gray-900 font-bold text-base flex items-center drop-shadow-sm">
-                    <span
-                        class="material-symbols-rounded mr-3 text-[22px] text-gray-600 group-hover:text-school-primary group-hover:rotate-90 transition-all duration-300">add</span>
-                    Přidat studijní program
-                </span>
-            </button>
+            <x-button as="button" onclick="openModal('create-program')"
+                text="Přidat studijní program" icon="add" iconAnimation="rotate"
+                rounded="2xl" size="wide"
+                extraClass="min-w-[320px]" />
         </div>
 
         <div class="space-y-8">
@@ -49,7 +40,7 @@
                 <div x-data="{
                     open: false,
                     sortColumn: 'id',
-                    sortDirection: 'asc',
+                    sortDirection: 'desc',
                     rounds: {{ Js::from(
                         $program->applicationRounds->map(function ($round) use ($program) {
                             $status = !$round->is_active
@@ -165,35 +156,18 @@
                                     </h2>
 
                                     <div class="flex items-center gap-2">
-                                        <button type="button" onclick="openModal('edit-program-{{ $program->id }}')"
-                                            class="group/edit relative flex items-center justify-center w-11 h-11 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer">
-                                            <div class="absolute inset-0 topo-bg opacity-30"></div>
-                                            <div
-                                                class="absolute inset-0 bg-white/60 backdrop-blur-[2px] group-hover/edit:backdrop-blur-[4px] transition-all duration-300">
-                                            </div>
-                                            <div
-                                                class="absolute inset-0 rounded-xl border border-white/60 border-b-2 border-b-gray-200/50">
-                                            </div>
-                                            <span
-                                                class="relative z-10 material-symbols-rounded text-[18px] text-gray-500 group-hover/edit:text-school-primary transition-colors">edit</span>
-                                        </button>
+                                        <x-button as="button" onclick="openModal('edit-program-{{ $program->id }}')"
+                                            icon="edit" variant="ghost" size="icon-only"
+                                            extraClass="w-11 h-11" />
 
                                         <form method="POST" action="{{ route('admin.programs.destroy', $program) }}"
                                             onsubmit="return confirm('Opravdu chcete odstranit tento studijní program?');">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" {{ $program->applications_count ? 'disabled' : '' }}
-                                                class="group/delete relative flex items-center justify-center w-11 h-11 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
-                                                <div class="absolute inset-0 topo-bg opacity-30"></div>
-                                                <div
-                                                    class="absolute inset-0 bg-white/60 backdrop-blur-[2px] group-hover/delete:backdrop-blur-[4px] transition-all duration-300">
-                                                </div>
-                                                <div
-                                                    class="absolute inset-0 rounded-xl border border-white/60 border-b-2 border-b-gray-200/50">
-                                                </div>
-                                                <span
-                                                    class="relative z-10 material-symbols-rounded text-[18px] text-gray-500 group-hover/delete:text-school-primary transition-colors">delete</span>
-                                            </button>
+                                            <x-button as="button" type="submit" icon="delete"
+                                                variant="ghost" size="icon-only"
+                                                extraClass="w-11 h-11"
+                                                :disabled="$program->applications_count > 0" />
                                         </form>
                                     </div>
                                 </div>
@@ -244,23 +218,12 @@
                             </div>
 
                             <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 mt-auto">
-                                <button type="button" @click="open = !open"
-                                    class="group/btn relative flex-grow flex items-center justify-center px-8 py-4 rounded-xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer">
-                                    <div class="absolute inset-0 topo-bg opacity-50 transition-opacity duration-300"></div>
-                                    <div
-                                        class="absolute inset-0 bg-white/60 backdrop-blur-[2px] group-hover/btn:backdrop-blur-[4px] transition-all duration-300">
-                                    </div>
-                                    <div
-                                        class="absolute inset-0 rounded-xl border border-white/60 border-b-4 border-b-gray-200/50">
-                                    </div>
-                                    <span
-                                        class="relative z-10 text-gray-900 font-bold text-base flex items-center drop-shadow-sm">
-                                        <span x-text="open ? 'Skrýt přijímací kola' : 'Zobrazit přijímací kola'"></span>
-                                        <span
-                                            class="material-symbols-rounded ml-3 text-[20px] text-gray-600 group-hover/btn:text-school-primary transition-transform duration-300"
-                                            :class="open ? 'rotate-180' : ''">expand_more</span>
-                                    </span>
-                                </button>
+                                <x-button as="button" click="open = !open"
+                                    size="wide" extraClass="flex-grow" spanClass="gap-3">
+                                    <span x-text="open ? 'Skrýt přijímací kola' : 'Zobrazit přijímací kola'"></span>
+                                    <span class="material-symbols-rounded text-[20px] text-gray-600 group-hover/btn:text-school-primary transition-transform duration-300"
+                                        :class="open ? 'rotate-180' : ''">expand_more</span>
+                                </x-button>
                             </div>
                         </div>
 
@@ -268,21 +231,9 @@
 
                     <div x-show="open" class="px-8 pb-8 pt-6 border-t border-gray-200/60 space-y-4">
                         <div class="flex justify-end">
-                            <button type="button" onclick="openModal('{{ $createRoundModalId }}')"
-                                class="group/add relative flex items-center justify-center px-4 py-3 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer">
-                                <div class="absolute inset-0 topo-bg opacity-30"></div>
-                                <div
-                                    class="absolute inset-0 bg-white/60 backdrop-blur-[2px] group-hover/add:backdrop-blur-[4px] transition-all duration-300">
-                                </div>
-                                <div
-                                    class="absolute inset-0 rounded-xl border border-white/60 border-b-2 border-b-gray-200/50">
-                                </div>
-                                <span class="relative z-10 text-gray-900 font-bold text-sm flex items-center">
-                                    <span
-                                        class="material-symbols-rounded mr-2 text-[18px] text-gray-500 group-hover/add:text-school-primary group-hover/add:rotate-90 transition-all duration-300">add</span>
-                                    Přidat kolo
-                                </span>
-                            </button>
+                            <x-button as="button" onclick="openModal('{{ $createRoundModalId }}')"
+                                text="Přidat kolo" icon="add" iconAnimation="rotate"
+                                variant="ghost" size="md" />
                         </div>
 
                         <div class="overflow-x-auto border border-gray-200/60 rounded-2xl bg-white shadow-sm">
@@ -340,35 +291,15 @@
                                                 x-text="round.completion_deadline_at_label"></td>
                                             <td class="px-5 py-4 whitespace-nowrap">
                                                 <div class="flex items-center gap-2">
-                                                    <button type="button" @click="openModal(round.edit_modal)"
-                                                        class="group relative flex items-center justify-center w-10 h-10 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer">
-                                                        <div class="absolute inset-0 topo-bg opacity-30"></div>
-                                                        <div
-                                                            class="absolute inset-0 bg-white/60 backdrop-blur-[2px] group-hover:backdrop-blur-[4px] transition-all duration-300">
-                                                        </div>
-                                                        <div
-                                                            class="absolute inset-0 rounded-xl border border-white/60 border-b-2 border-b-gray-200/50">
-                                                        </div>
-                                                        <span
-                                                            class="relative z-10 material-symbols-rounded text-[18px] text-gray-500 group-hover:text-school-primary transition-colors">edit</span>
-                                                    </button>
+                                                    <x-button as="button" click="openModal(round.edit_modal)"
+                                                        icon="edit" variant="ghost" size="icon-only" />
 
                                                     <form method="POST" :action="round.delete_url"
                                                         onsubmit="return confirm('Opravdu chcete odstranit toto přijímací kolo?');">
                                                         @csrf
                                                         @method('DELETE')
-                                                        <button type="submit"
-                                                            class="group relative flex items-center justify-center w-10 h-10 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer">
-                                                            <div class="absolute inset-0 topo-bg opacity-30"></div>
-                                                            <div
-                                                                class="absolute inset-0 bg-white/60 backdrop-blur-[2px] group-hover:backdrop-blur-[4px] transition-all duration-300">
-                                                            </div>
-                                                            <div
-                                                                class="absolute inset-0 rounded-xl border border-white/60 border-b-2 border-b-gray-200/50">
-                                                            </div>
-                                                            <span
-                                                                class="relative z-10 material-symbols-rounded text-[18px] text-gray-500 group-hover:text-school-primary transition-colors">delete</span>
-                                                        </button>
+                                                        <x-button as="button" type="submit" icon="delete"
+                                                            variant="ghost" size="icon-only" />
                                                     </form>
                                                 </div>
                                             </td>

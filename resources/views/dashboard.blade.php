@@ -5,19 +5,8 @@
 @section('header-right')
     <form method="POST" action="{{ route('logout') }}">
         @csrf
-        <button type="submit"
-            class="group relative flex items-center justify-center px-4 py-2 rounded-xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer">
-            <div class="absolute inset-0 topo-bg opacity-50 transition-opacity duration-300"></div>
-            <div
-                class="absolute inset-0 bg-white/60 backdrop-blur-[2px] group-hover:backdrop-blur-[4px] transition-all duration-300">
-            </div>
-            <div class="absolute inset-0 rounded-xl border border-white/60 border-b-4 border-b-gray-200/50"></div>
-            <span class="relative z-10 text-gray-600 font-bold text-xs flex items-center drop-shadow-sm">
-                <span
-                    class="material-symbols-rounded mr-2 text-[18px] text-gray-600 group-hover:text-school-primary transition-transform duration-300 group-hover:-translate-x-1">logout</span>
-                Odhlásit se
-            </span>
-        </button>
+        <x-button as="button" type="submit" text="Odhlásit se" icon="logout" iconAnimation="back" size="sm"
+            spanClass="text-gray-600" />
     </form>
 @endsection
 
@@ -40,20 +29,8 @@
                         <p class="text-lg font-bold text-gray-900 break-all mb-1">{{ Auth::user()->email }}</p>
                         <p class="text-sm text-gray-500">Adresa, pomocí které se přihlašujete.</p>
                     </div>
-                    <button onclick="openModal('email-modal')"
-                        class="group relative flex items-center justify-center px-5 py-2.5 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer self-start">
-                        <div class="absolute inset-0 topo-bg opacity-40 transition-opacity duration-300"></div>
-                        <div
-                            class="absolute inset-0 bg-white/60 backdrop-blur-[2px] group-hover:backdrop-blur-[4px] transition-all duration-300">
-                        </div>
-                        <div class="absolute inset-0 rounded-xl border border-white/60 border-b-2 border-b-gray-200/50">
-                        </div>
-                        <span class="relative z-10 text-gray-700 font-bold text-sm flex items-center">
-                            <span
-                                class="material-symbols-rounded mr-2 text-[18px] text-gray-500 group-hover:text-school-primary transition-colors">edit</span>
-                            Změnit e-mail
-                        </span>
-                    </button>
+                    <x-button as="button" onclick="openModal('email-modal')" text="Změnit e-mail" icon="edit"
+                        variant="secondary" size="md" extraClass="self-start" spanClass="text-gray-700" />
                 </div>
 
                 <div class="p-8 flex flex-col justify-between gap-5">
@@ -72,20 +49,9 @@
                             <p class="text-sm text-gray-500 mt-1">Bez hesla se přihlašujete pouze odkazem z e-mailu.</p>
                         @endif
                     </div>
-                    <button onclick="openModal('password-modal')"
-                        class="group relative flex items-center justify-center px-5 py-2.5 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer self-start">
-                        <div class="absolute inset-0 topo-bg opacity-40 transition-opacity duration-300"></div>
-                        <div
-                            class="absolute inset-0 bg-white/60 backdrop-blur-[2px] group-hover:backdrop-blur-[4px] transition-all duration-300">
-                        </div>
-                        <div class="absolute inset-0 rounded-xl border border-white/60 border-b-2 border-b-gray-200/50">
-                        </div>
-                        <span class="relative z-10 text-gray-700 font-bold text-sm flex items-center">
-                            <span
-                                class="material-symbols-rounded mr-2 text-[18px] text-gray-500 group-hover:text-school-primary transition-colors">lock_reset</span>
-                            {{ Auth::user()->password ? 'Změnit heslo' : 'Vytvořit heslo' }}
-                        </span>
-                    </button>
+                    <x-button as="button" onclick="openModal('password-modal')"
+                        text="{{ Auth::user()->password ? 'Změnit heslo' : 'Vytvořit heslo' }}" icon="lock_reset"
+                        variant="secondary" size="md" extraClass="self-start" spanClass="text-gray-700" />
                 </div>
             </div>
         </div>
@@ -101,20 +67,8 @@
                     <h2 class="font-bold text-gray-800 text-lg">Moje přihlášky</h2>
                 </div>
                 @if ($applications->isNotEmpty())
-                    <a href="{{ route('programs.index') }}"
-                        class="group relative flex items-center justify-center px-5 py-2.5 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
-                        <div class="absolute inset-0 topo-bg opacity-40 transition-opacity duration-300"></div>
-                        <div
-                            class="absolute inset-0 bg-white/60 backdrop-blur-[2px] group-hover:backdrop-blur-[4px] transition-all duration-300">
-                        </div>
-                        <div class="absolute inset-0 rounded-xl border border-white/60 border-b-2 border-b-gray-200/50">
-                        </div>
-                        <span class="relative z-10 text-gray-900 font-bold text-sm flex items-center">
-                            <span
-                                class="material-symbols-rounded mr-2 text-[20px] text-gray-600 group-hover:text-school-primary transition-all duration-300 group-hover:rotate-90">add</span>
-                            Nová přihláška
-                        </span>
-                    </a>
+                    <x-button as="a" href="{{ route('programs.index') }}" text="Nová přihláška" icon="add"
+                        iconAnimation="rotate" variant="secondary" size="md" />
                 @endif
             </div>
 
@@ -122,20 +76,8 @@
                 <div class="p-16 flex flex-col items-center justify-center text-center">
                     <p class="text-gray-500 text-lg mb-1">Zatím jste nepodal(a) žádnou přihlášku.</p>
                     <p class="text-gray-400 text-sm mb-10">Vyberte si obor z naší nabídky a vyplňte formulář.</p>
-                    <a href="{{ route('programs.index') }}"
-                        class="group relative flex items-center justify-center px-10 py-5 rounded-xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer">
-                        <div class="absolute inset-0 topo-bg opacity-50 transition-opacity duration-300"></div>
-                        <div
-                            class="absolute inset-0 bg-white/60 backdrop-blur-[2px] group-hover:backdrop-blur-[4px] transition-all duration-300">
-                        </div>
-                        <div class="absolute inset-0 rounded-xl border border-white/60 border-b-4 border-b-gray-200/50">
-                        </div>
-                        <span class="relative z-10 text-gray-900 font-bold text-xl flex items-center drop-shadow-sm">
-                            <span
-                                class="material-symbols-rounded mr-3 text-[24px] text-gray-600 group-hover:text-school-primary transition-all duration-300 group-hover:rotate-90">add</span>
-                            Podat novou přihlášku
-                        </span>
-                    </a>
+                    <x-button as="a" href="{{ route('programs.index') }}" text="Podat novou přihlášku"
+                        icon="add" iconAnimation="rotate" size="hero" />
                 </div>
             @else
                 <div class="p-6 space-y-4">
@@ -164,7 +106,9 @@
                                 ->filter(fn($s) => $s === 'complete' || $s === 'locked')
                                 ->count();
                             $hasPending = collect($statusValues)->contains('pending');
-                            $hasIssue = collect($statusValues)->contains(fn($status) => in_array($status, ['incomplete', 'failed'], true));
+                            $hasIssue = collect($statusValues)->contains(
+                                fn($status) => in_array($status, ['incomplete', 'failed'], true),
+                            );
 
                             if ($app->submitted) {
                                 $overallCls = 'bg-green-50 text-green-700 border-green-200';
@@ -232,7 +176,8 @@
                                         <div class="flex items-center gap-4">
                                             <div class="flex items-center gap-1.5">
                                                 @foreach ($statuses as $key => $status)
-                                                    <span class="h-2.5 w-2.5 rounded-full {{ $statusMeta[$status]['color'] }}"
+                                                    <span
+                                                        class="h-2.5 w-2.5 rounded-full {{ $statusMeta[$status]['color'] }}"
                                                         title="{{ $checkpointLabels[$key] }}: {{ $statusMeta[$status]['label'] }}"></span>
                                                 @endforeach
                                             </div>
@@ -256,24 +201,9 @@
                                             {{ $overallText }}
                                         </span>
 
-                                        <a href="{{ $actionRoute }}"
-                                            class="group/btn relative flex items-center justify-center px-5 py-2.5 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer flex-shrink-0">
-                                            <div
-                                                class="absolute inset-0 topo-bg opacity-30 transition-opacity duration-300">
-                                            </div>
-                                            <div
-                                                class="absolute inset-0 bg-white/60 backdrop-blur-[2px] group-hover/btn:backdrop-blur-[4px] transition-all duration-300">
-                                            </div>
-                                            <div
-                                                class="absolute inset-0 rounded-xl border border-white/60 border-b-2 border-b-gray-200/50">
-                                            </div>
-                                            <span
-                                                class="relative z-10 text-gray-900 font-bold text-sm flex items-center whitespace-nowrap">
-                                                <span
-                                                    class="material-symbols-rounded mr-1.5 text-[17px] text-gray-500 group-hover/btn:text-school-primary transition-colors duration-300">{{ $actionIcon }}</span>
-                                                {{ $actionText }}
-                                            </span>
-                                        </a>
+                                        <x-button as="a" href="{{ $actionRoute }}" text="Otevřít přihlášku"
+                                            icon="arrow_forward" iconPosition="right" iconAnimation="forward"
+                                            variant="ghost" size="md" extraClass="flex-shrink-0" />
                                     </div>
 
                                 </div>
@@ -284,7 +214,8 @@
             @endif
 
             <div class="border-t border-gray-200/60 px-8 py-6 bg-gray-50/30 text-center">
-                <p class="text-sm text-gray-500 font-medium mb-3">Máte problém s účtem nebo přihláškou? Kontaktujte studijní
+                <p class="text-sm text-gray-500 font-medium mb-3">Máte problém s účtem nebo přihláškou? Kontaktujte
+                    studijní
                     oddělení.</p>
                 <div class="flex flex-col sm:flex-row justify-center gap-2 sm:gap-6 text-sm">
                     <a href="mailto:info@oauh.cz"
@@ -331,20 +262,8 @@
                             </p>
                         @enderror
                     </div>
-                    <button type="submit"
-                        class="group relative w-full flex items-center justify-center px-8 py-4 rounded-xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer">
-                        <div class="absolute inset-0 topo-bg opacity-50 transition-opacity duration-300"></div>
-                        <div
-                            class="absolute inset-0 bg-white/60 backdrop-blur-[2px] group-hover:backdrop-blur-[4px] transition-all duration-300">
-                        </div>
-                        <div class="absolute inset-0 rounded-xl border border-white/60 border-b-4 border-b-gray-200/50">
-                        </div>
-                        <span class="relative z-10 text-gray-900 font-bold text-base flex items-center drop-shadow-sm">
-                            <span
-                                class="material-symbols-rounded mr-2 text-[20px] text-gray-600 group-hover:text-school-primary transition-colors duration-300">save</span>
-                            Uložit změny
-                        </span>
-                    </button>
+                    <x-button as="button" type="submit" text="Uložit změny" icon="save" fullWidth
+                        size="wide" />
                 </form>
             </div>
         </div>
@@ -394,20 +313,8 @@
                                 class="w-full rounded-xl border border-gray-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-school-primary focus:border-school-primary bg-white/50 pl-10 py-3 transition-all placeholder-gray-400 text-sm">
                         </div>
                     </div>
-                    <button type="submit"
-                        class="group relative w-full flex items-center justify-center px-8 py-4 rounded-xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer">
-                        <div class="absolute inset-0 topo-bg opacity-50 transition-opacity duration-300"></div>
-                        <div
-                            class="absolute inset-0 bg-white/60 backdrop-blur-[2px] group-hover:backdrop-blur-[4px] transition-all duration-300">
-                        </div>
-                        <div class="absolute inset-0 rounded-xl border border-white/60 border-b-4 border-b-gray-200/50">
-                        </div>
-                        <span class="relative z-10 text-gray-900 font-bold text-base flex items-center drop-shadow-sm">
-                            <span
-                                class="material-symbols-rounded mr-2 text-[20px] text-gray-600 group-hover:text-school-primary transition-colors duration-300">save</span>
-                            Uložit heslo
-                        </span>
-                    </button>
+                    <x-button as="button" type="submit" text="Uložit heslo" icon="save" fullWidth
+                        size="wide" />
                 </form>
             </div>
         </div>

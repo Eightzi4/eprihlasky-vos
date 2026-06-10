@@ -46,38 +46,16 @@
                 </template>
 
                 <template x-if="!disabled">
-                    <button type="submit"
-                        class="group relative flex items-center justify-center px-6 py-3 sm:px-8 sm:py-4 rounded-xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer">
-                        <div class="absolute inset-0 topo-bg opacity-50 transition-opacity duration-300"></div>
-                        <div
-                            class="absolute inset-0 bg-white/60 backdrop-blur-[2px] group-hover:backdrop-blur-[4px] transition-all duration-300">
-                        </div>
-                        <div class="absolute inset-0 rounded-xl border border-white/60 border-b-4 border-b-gray-200/50">
-                        </div>
-                        <span
-                            class="relative z-10 text-gray-900 font-bold text-base sm:text-lg flex items-center drop-shadow-sm whitespace-nowrap">
-                            {{ $submitLabel }}
-                            <span
-                                class="material-symbols-rounded ml-2 sm:ml-3 text-[20px] text-school-primary transition-transform duration-300 group-hover:translate-x-1">send</span>
-                        </span>
-                    </button>
+                    <x-button as="button" type="submit" size="xl">
+                        {{ $submitLabel }}
+                        <span class="material-symbols-rounded ml-2 sm:ml-3 text-[20px] text-school-primary transition-transform duration-300 group-hover/btn:translate-x-1">send</span>
+                    </x-button>
                 </template>
             </div>
         @elseif ($nextRoute)
-            <button type="button" onclick="navigateTo('{{ route($nextRoute, $application->id) }}')"
-                class="group relative flex items-center justify-center px-6 py-3 sm:px-8 sm:py-4 rounded-xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer">
-                <div class="absolute inset-0 topo-bg opacity-50"></div>
-                <div
-                    class="absolute inset-0 bg-white/60 backdrop-blur-[2px] group-hover:backdrop-blur-[4px] transition-all duration-300">
-                </div>
-                <div class="absolute inset-0 rounded-xl border border-white/60 border-b-4 border-b-gray-200/50"></div>
-                <span
-                    class="relative z-10 text-gray-900 font-bold text-base sm:text-lg flex items-center drop-shadow-sm whitespace-nowrap">
-                    {{ $nextLabel ?? 'Pokračovat' }}
-                    <span
-                        class="material-symbols-rounded ml-2 text-[20px] text-gray-600 group-hover:text-school-primary transition-transform duration-300 group-hover:translate-x-1">arrow_forward</span>
-                </span>
-            </button>
+            <x-button as="button" onclick="navigateTo('{{ route($nextRoute, $application->id) }}')"
+                text="{{ $nextLabel ?? 'Pokračovat' }}" icon="arrow_forward"
+                iconPosition="right" iconAnimation="forward" size="xl" />
         @endif
 
     </div>

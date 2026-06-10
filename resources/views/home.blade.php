@@ -22,35 +22,13 @@
 
         <div class="flex flex-col sm:flex-row items-center justify-center gap-6 w-full">
 
-            <a href="{{ route('programs.index') }}"
-                class="group relative flex items-center justify-center px-8 py-4 rounded-xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300">
-                <div class="absolute inset-0 topo-bg opacity-50 transition-opacity duration-300"></div>
-                <div
-                    class="absolute inset-0 bg-white/60 backdrop-blur-[2px] group-hover:backdrop-blur-[4px] transition-all duration-300">
-                </div>
-                <div class="absolute inset-0 rounded-xl border border-white/60 border-b-4 border-b-gray-200/50"></div>
+            <x-button as="a" href="{{ route('programs.index') }}"
+                text="Podat novou přihlášku" icon="add" iconAnimation="rotate"
+                size="xl" />
 
-                <span class="relative z-10 text-gray-900 font-bold text-lg flex items-center drop-shadow-sm">
-                    <span
-                        class="material-symbols-rounded mr-3 text-[20px] text-gray-600 group-hover:text-school-primary transition-all duration-300 group-hover:rotate-90">add</span>
-                    Podat novou přihlášku
-                </span>
-            </a>
-
-            <a href="{{ route('login') }}"
-                class="group relative flex items-center justify-center px-8 py-4 rounded-xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300">
-                <div class="absolute inset-0 topo-bg opacity-50 transition-opacity duration-300"></div>
-                <div
-                    class="absolute inset-0 bg-white/60 backdrop-blur-[2px] group-hover:backdrop-blur-[4px] transition-all duration-300">
-                </div>
-                <div class="absolute inset-0 rounded-xl border border-white/60 border-b-4 border-b-gray-200/50"></div>
-
-                <span class="relative z-10 text-gray-900 font-bold text-lg flex items-center drop-shadow-sm">
-                    <span
-                        class="material-symbols-rounded mr-3 text-[20px] text-gray-600 group-hover:text-school-primary transition-colors duration-300">grid_view</span>
-                    Moje přihlášky
-                </span>
-            </a>
+            <x-button as="a" href="{{ route('login') }}"
+                text="Moje přihlášky" icon="grid_view"
+                size="xl" />
         </div>
 
         <div class="mt-14 pt-8 border-t border-gray-200/60">

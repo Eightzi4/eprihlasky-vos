@@ -45,20 +45,10 @@
     <header class="bg-[#f7f7f7]/90 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative h-16 flex items-center justify-between">
             <div class="flex items-center">
-                <button type="button" onclick="navigateTo('dashboard')"
-                    class="group relative flex items-center justify-center px-4 py-2 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer border border-transparent hover:border-white/50 bg-transparent">
-                    <div class="absolute inset-0 topo-bg opacity-30 transition-opacity duration-300"></div>
-                    <div
-                        class="absolute inset-0 bg-white/60 backdrop-blur-[2px] group-hover:backdrop-blur-[4px] transition-all duration-300">
-                    </div>
-                    <div class="absolute inset-0 rounded-xl border border-white/60 border-b-2 border-b-gray-200/50">
-                    </div>
-                    <span class="relative z-10 text-gray-600 font-bold text-xs flex items-center gap-2">
-                        <span
-                            class="material-symbols-rounded text-[18px] text-gray-500 group-hover:text-school-primary transition-colors duration-300">save</span>
-                        Uložit a odejít
-                    </span>
-                </button>
+                <x-button as="button" onclick="navigateTo('dashboard')" text="Uložit a odejít"
+                    icon="save" variant="ghost" size="xs"
+                    extraClass="border border-transparent hover:border-white/50 bg-transparent"
+                    spanClass="text-gray-600 gap-2" />
             </div>
 
             <div class="flex items-center gap-3">
@@ -349,70 +339,7 @@
             </div>
         </div>
 
-        <div x-show="statusLegendOpen" x-transition.opacity
-            class="fixed inset-0 z-[70] flex items-center justify-center px-4 py-6" style="display: none;">
-            <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm" @click="statusLegendOpen = false"></div>
-            <div
-                class="relative w-full max-w-lg bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/60 ring-1 ring-black/5 overflow-hidden">
-                <div class="flex items-start justify-between gap-4 px-6 py-5 border-b border-gray-100">
-                    <div>
-                        <h3 class="text-lg font-bold text-gray-900">Vysvětlení stavů</h3>
-                        <p class="text-sm text-gray-500 mt-1">Co znamenají ikony ve stavovém panelu přihlášky.</p>
-                    </div>
-                    <button type="button" @click="statusLegendOpen = false"
-                        class="inline-flex h-9 w-9 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
-                        aria-label="Zavřít">
-                        <span class="material-symbols-rounded text-[20px]">close</span>
-                    </button>
-                </div>
-                <div class="px-6 py-5 space-y-4">
-                    <div class="flex items-start gap-3">
-                        <span class="material-symbols-rounded text-green-500 text-[20px]">check_circle</span>
-                        <div>
-                            <p class="font-bold text-sm text-gray-900">Splněno</p>
-                            <p class="text-sm text-gray-500">Část přihlášky je vyplněná nebo potvrzená.</p>
-                        </div>
-                    </div>
-                    <div class="flex items-start gap-3">
-                        <span class="material-symbols-rounded text-blue-400 text-[20px]">pending</span>
-                        <div>
-                            <p class="font-bold text-sm text-gray-900">Čeká na školu</p>
-                            <p class="text-sm text-gray-500">Údaje nebo příloha jsou doplněné a čekají na kontrolu
-                                školy.</p>
-                        </div>
-                    </div>
-                    <div class="flex items-start gap-3">
-                        <span class="material-symbols-rounded text-orange-500 text-[20px]">error</span>
-                        <div>
-                            <p class="font-bold text-sm text-gray-900">Je potřeba doplnit</p>
-                            <p class="text-sm text-gray-500">Tato část ještě není hotová a můžete ji doplnit.</p>
-                        </div>
-                    </div>
-                    <div class="flex items-start gap-3">
-                        <span class="material-symbols-rounded text-gray-400 text-[20px]">lock</span>
-                        <div>
-                            <p class="font-bold text-sm text-gray-900">Uzamčeno</p>
-                            <p class="text-sm text-gray-500">Sekci už není možné upravovat.</p>
-                        </div>
-                    </div>
-                    <div class="flex items-start gap-3">
-                        <span class="material-symbols-rounded text-school-primary text-[20px]">cancel</span>
-                        <div>
-                            <p class="font-bold text-sm text-gray-900">Nesplněno po termínu</p>
-                            <p class="text-sm text-gray-500">Termín uplynul a část přihlášky nebyla dokončena včas.</p>
-                        </div>
-                    </div>
-                    <div class="flex items-start gap-3">
-                        <span class="material-symbols-rounded text-amber-500 text-[20px]">verified</span>
-                        <div>
-                            <p class="font-bold text-sm text-gray-900">Přihláška dokončena včas</p>
-                            <p class="text-sm text-gray-500">Všechny povinné části z vaší strany byly doplněny do
-                                termínu.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        @include('components.status-legend')
     </main>
 
     <script>

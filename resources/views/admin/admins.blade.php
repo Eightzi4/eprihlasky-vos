@@ -76,16 +76,9 @@
                     <p class="text-sm text-gray-400">Vyhledávání podle jména i e-mailu a rychlé třídění podle důležitých sloupců.</p>
                 </div>
 
-                <button type="button" onclick="openModal('create-admin')"
-                    class="group relative flex items-center justify-center px-5 py-2.5 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer">
-                    <div class="absolute inset-0 topo-bg opacity-40"></div>
-                    <div class="absolute inset-0 bg-white/60 backdrop-blur-[2px] group-hover:backdrop-blur-[4px] transition-all duration-300"></div>
-                    <div class="absolute inset-0 rounded-xl border border-white/60 border-b-2 border-b-gray-200/50"></div>
-                    <span class="relative z-10 text-gray-900 font-bold text-sm flex items-center whitespace-nowrap">
-                        <span class="material-symbols-rounded mr-2 text-[18px] text-gray-500 group-hover:text-school-primary group-hover:rotate-90 transition-all duration-300">add</span>
-                        Přidat administrátora
-                    </span>
-                </button>
+                <x-button as="button" onclick="openModal('create-admin')"
+                    text="Přidat administrátora" icon="add" iconAnimation="rotate"
+                    variant="secondary" size="md" />
             </div>
 
             <div class="p-6 sm:p-8 space-y-4">
@@ -137,24 +130,14 @@
                                     </td>
                                     <td class="px-5 py-4 whitespace-nowrap">
                                         <div x-show="!admin.is_self" class="flex items-center gap-2">
-                                            <button type="button" @click="openModal(admin.edit_modal)"
-                                                class="group relative flex items-center justify-center w-10 h-10 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer">
-                                                <div class="absolute inset-0 topo-bg opacity-30"></div>
-                                                <div class="absolute inset-0 bg-white/60 backdrop-blur-[2px] group-hover:backdrop-blur-[4px] transition-all duration-300"></div>
-                                                <div class="absolute inset-0 rounded-xl border border-white/60 border-b-2 border-b-gray-200/50"></div>
-                                                <span class="relative z-10 material-symbols-rounded text-[18px] text-gray-500 group-hover:text-school-primary transition-colors">edit</span>
-                                            </button>
+                                            <x-button as="button" click="openModal(admin.edit_modal)"
+                                                icon="edit" variant="ghost" size="icon-only" />
 
                                             <form method="POST" :action="admin.delete_url" onsubmit="return confirm('Opravdu chcete odstranit tento administrátorský účet?');">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit"
-                                                    class="group relative flex items-center justify-center w-10 h-10 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer">
-                                                    <div class="absolute inset-0 topo-bg opacity-30"></div>
-                                                    <div class="absolute inset-0 bg-white/60 backdrop-blur-[2px] group-hover:backdrop-blur-[4px] transition-all duration-300"></div>
-                                                    <div class="absolute inset-0 rounded-xl border border-white/60 border-b-2 border-b-gray-200/50"></div>
-                                                    <span class="relative z-10 material-symbols-rounded text-[18px] text-gray-500 group-hover:text-school-primary transition-colors">delete</span>
-                                                </button>
+                                                <x-button as="button" type="submit" icon="delete"
+                                                    variant="ghost" size="icon-only" />
                                             </form>
                                         </div>
                                     </td>

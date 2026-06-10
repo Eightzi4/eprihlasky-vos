@@ -81,36 +81,12 @@
                 </div>
                 @if (!$isLocked)
                     <div class="flex flex-col sm:flex-row xl:flex-col gap-3 w-full xl:w-auto">
-                        <a href="{{ route('nia.real.login', $application->id) }}"
-                            class="group/btn relative flex items-center justify-center px-6 py-3 sm:px-8 sm:py-4 rounded-xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer w-full sm:w-auto xl:w-[280px]">
-                            <div class="absolute inset-0 topo-bg opacity-50"></div>
-                            <div
-                                class="absolute inset-0 bg-white/60 backdrop-blur-[2px] group-hover/btn:backdrop-blur-[4px] transition-all duration-300">
-                            </div>
-                            <div class="absolute inset-0 rounded-xl border border-white/60 border-b-4 border-b-gray-200/50">
-                            </div>
-                            <span
-                                class="relative z-10 text-gray-900 font-bold text-base sm:text-lg flex items-center drop-shadow-sm whitespace-nowrap">
-                                Ověřit identitu
-                                <span
-                                    class="material-symbols-rounded ml-2 text-[22px] text-gray-600 group-hover/btn:text-school-primary transition-transform duration-300 group-hover/btn:translate-x-1">login</span>
-                            </span>
-                        </a>
-                        <a href="https://www.youtube.com/watch?v=5IJwV9EJb0o" target="_blank"
-                            class="group/btn relative flex items-center justify-center px-6 py-3 sm:px-8 sm:py-4 rounded-xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer w-full sm:w-auto xl:w-[280px]">
-                            <div class="absolute inset-0 topo-bg opacity-30"></div>
-                            <div
-                                class="absolute inset-0 bg-white/40 backdrop-blur-[2px] group-hover/btn:backdrop-blur-[4px] transition-all duration-300">
-                            </div>
-                            <div class="absolute inset-0 rounded-xl border border-white/60 border-b-4 border-b-gray-200/50">
-                            </div>
-                            <span
-                                class="relative z-10 text-gray-700 font-bold text-base sm:text-lg flex items-center drop-shadow-sm whitespace-nowrap">
-                                Video návod
-                                <span
-                                    class="material-symbols-rounded ml-2 text-[22px] text-red-600 group-hover/btn:scale-110 transition-transform duration-300">play_circle</span>
-                            </span>
-                        </a>
+                        <x-button as="a" href="{{ route('nia.real.login', $application->id) }}"
+                            text="Ověřit identitu" icon="login" iconPosition="right" iconAnimation="forward"
+                            size="xl" extraClass="w-full sm:w-auto xl:w-[280px]" />
+                        <x-button as="a" href="https://www.youtube.com/watch?v=5IJwV9EJb0o"
+                            target="_blank" text="Video návod" icon="play_circle"
+                            iconPosition="right" size="xl" />
                     </div>
                 @endif
             </div>

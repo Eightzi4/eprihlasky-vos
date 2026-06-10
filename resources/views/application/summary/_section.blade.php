@@ -27,19 +27,10 @@
                 {{ $readOnlyLabel }}
             </span>
         @else
-            <a href="{{ $editRoute }}"
-                class="group relative flex items-center justify-center px-4 py-2 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-transparent hover:border-gray-200 flex-shrink-0 ml-4">
-                <div class="absolute inset-0 topo-bg opacity-30"></div>
-                <div
-                    class="absolute inset-0 bg-white/60 backdrop-blur-[2px] group-hover:bg-white/70 transition-all duration-300">
-                </div>
-                <div class="absolute inset-0 rounded-xl border border-white/60 border-b-2 border-b-gray-200/50"></div>
-                <span class="relative z-10 text-xs font-bold text-gray-600 flex items-center gap-2">
-                    <span
-                        class="material-symbols-rounded text-[16px] text-gray-500 group-hover:text-school-primary transition-colors">edit</span>
-                    Upravit
-                </span>
-            </a>
+            <x-button as="a" href="{{ $editRoute }}" text="Upravit"
+                icon="edit" variant="ghost" size="xs"
+                extraClass="border border-transparent hover:border-gray-200 flex-shrink-0 ml-4"
+                spanClass="text-gray-600" />
         @endif
     </div>
 

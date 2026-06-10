@@ -3,19 +3,8 @@
 @section('title', 'Admin Přihlášení | OAUH')
 
 @section('header-left')
-    <a href="{{ url('/') }}"
-        class="group relative flex items-center justify-center px-4 py-2 rounded-xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300">
-        <div class="absolute inset-0 topo-bg opacity-50 transition-opacity duration-300"></div>
-        <div
-            class="absolute inset-0 bg-white/60 backdrop-blur-[2px] group-hover:backdrop-blur-[4px] transition-all duration-300">
-        </div>
-        <div class="absolute inset-0 rounded-xl border border-white/60 border-b-4 border-b-gray-200/50"></div>
-        <span class="relative z-10 text-gray-600 font-bold text-sm flex items-center drop-shadow-sm">
-            <span
-                class="material-symbols-rounded mr-2 text-[18px] text-gray-600 group-hover:text-school-primary transition-transform duration-300 group-hover:-translate-x-1">arrow_back</span>
-            Zpět
-        </span>
-    </a>
+    <x-button as="a" href="{{ url('/') }}" text="Zpět"
+        icon="arrow_back" iconAnimation="back" size="sm" spanClass="text-gray-600" />
 @endsection
 
 @section('content')
@@ -47,19 +36,9 @@
                 @enderror
             </div>
 
-            <button type="submit"
-                class="group relative w-full flex items-center justify-center px-8 py-4 rounded-xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer">
-                <div class="absolute inset-0 topo-bg opacity-50 transition-opacity duration-300"></div>
-                <div
-                    class="absolute inset-0 bg-white/60 backdrop-blur-[2px] group-hover:backdrop-blur-[4px] transition-all duration-300">
-                </div>
-                <div class="absolute inset-0 rounded-xl border border-white/60 border-b-4 border-b-gray-200/50"></div>
-                <span class="relative z-10 text-gray-900 font-bold text-base flex items-center drop-shadow-sm">
-                    Pokračovat
-                    <span
-                        class="material-symbols-rounded ml-3 text-[20px] text-gray-600 group-hover:text-school-primary transition-transform duration-300 group-hover:translate-x-1">arrow_forward</span>
-                </span>
-            </button>
+            <x-button as="button" type="submit" text="Pokračovat"
+                icon="arrow_forward" iconPosition="right" iconAnimation="forward"
+                fullWidth size="wide" />
         </form>
 
         <div class="mt-8 pt-6 border-t border-gray-200/60 text-xs text-gray-400">

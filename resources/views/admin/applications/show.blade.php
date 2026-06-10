@@ -74,18 +74,10 @@
                     @endif
                 </div>
             </div>
-            <a href="{{ route('admin.applications') }}"
-                class="group relative flex-shrink-0 inline-flex items-center justify-center px-4 py-2 rounded-xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300">
-                <div class="absolute inset-0 topo-bg opacity-50"></div>
-                <div
-                    class="absolute inset-0 bg-white/60 backdrop-blur-[2px] group-hover:backdrop-blur-[4px] transition-all duration-300">
-                </div>
-                <div class="absolute inset-0 rounded-xl border border-white/60 border-b-4 border-b-gray-200/50"></div>
-                <span
-                    class="relative z-10 text-gray-600 font-bold text-sm flex items-center drop-shadow-sm whitespace-nowrap"><span
-                        class="material-symbols-rounded mr-2 text-[18px] text-gray-600 group-hover:text-school-primary group-hover:-translate-x-1 transition-all duration-300">arrow_back</span>Zpět
-                    na přehled</span>
-            </a>
+            <x-button as="a" href="{{ route('admin.applications') }}"
+                text="Zpět na přehled" icon="arrow_back" iconAnimation="back"
+                size="sm" spanClass="text-gray-600"
+                extraClass="flex-shrink-0 inline-flex" />
         </div>
     </div>
 
@@ -110,19 +102,9 @@
                             </div>
                         @enderror
                     </div>
-                    <button type="submit"
-                        class="group relative inline-flex items-center justify-center px-6 py-3 rounded-xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 min-h-[52px]">
-                        <div class="absolute inset-0 topo-bg opacity-50"></div>
-                        <div
-                            class="absolute inset-0 bg-white/60 backdrop-blur-[2px] group-hover:backdrop-blur-[4px] transition-all duration-300">
-                        </div>
-                        <div class="absolute inset-0 rounded-xl border border-white/60 border-b-4 border-b-gray-200/50">
-                        </div>
-                        <span
-                            class="relative z-10 text-gray-900 font-bold text-sm flex items-center whitespace-nowrap"><span
-                                class="material-symbols-rounded mr-2 text-[18px] text-gray-500 group-hover:text-school-primary transition-colors">save</span>Uložit
-                            číslo</span>
-                    </button>
+                    <x-button as="button" type="submit" text="Uložit číslo"
+                        icon="save" size="lg"
+                        extraClass="min-h-[52px]" />
                 </form>
             </div>
 
@@ -273,35 +255,17 @@
                         </div>
                         <form method="POST"
                             action="{{ route('admin.applications.revertEducation', $application->id) }}">@csrf
-                            @method('PATCH')<button type="submit"
-                                class="group relative flex items-center justify-center px-5 py-2.5 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer">
-                                <div class="absolute inset-0 topo-bg opacity-40"></div>
-                                <div
-                                    class="absolute inset-0 bg-white/60 backdrop-blur-[2px] group-hover:backdrop-blur-[4px] transition-all duration-300">
-                                </div>
-                                <div
-                                    class="absolute inset-0 rounded-xl border border-white/60 border-b-2 border-b-gray-200/50">
-                                </div><span class="relative z-10 text-gray-900 font-bold text-sm flex items-center"><span
-                                        class="material-symbols-rounded mr-2 text-[18px] text-gray-500 group-hover:text-school-primary group-hover:-translate-x-0.5 transition-all duration-300">undo</span>Zrušit
-                                    uznání</span>
+                            @method('PATCH')<x-button as="button" type="submit"
+                                text="Zrušit uznání" icon="undo" iconAnimation="back"
+                                variant="secondary" size="md" />
                             </button></form>
                     @elseif ($educationBaseReady)
                         <template x-if="submitted && hasMaturita">
                             <form method="POST"
                                 action="{{ route('admin.applications.acceptEducation', $application->id) }}">@csrf
-                                @method('PATCH')<button type="submit"
-                                    class="group relative flex items-center justify-center px-5 py-2.5 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer">
-                                    <div class="absolute inset-0 topo-bg opacity-40"></div>
-                                    <div
-                                        class="absolute inset-0 bg-white/60 backdrop-blur-[2px] group-hover:backdrop-blur-[4px] transition-all duration-300">
-                                    </div>
-                                    <div
-                                        class="absolute inset-0 rounded-xl border border-white/60 border-b-2 border-b-gray-200/50">
-                                    </div><span
-                                        class="relative z-10 text-gray-900 font-bold text-sm flex items-center"><span
-                                            class="material-symbols-rounded mr-2 text-[18px] text-gray-500 group-hover:text-school-primary transition-colors">check_circle</span>Uznat
-                                        vzdělání</span>
-                                </button></form>
+                                @method('PATCH')<x-button as="button" type="submit"
+                                    text="Uznat vzdělání" icon="check_circle"
+                                    variant="secondary" size="md" /></form>
                         </template>
                         <template x-if="!submitted">
                             <span class="text-sm text-gray-400 font-medium">Před ověřením musí uchazeč nejprve odeslat
@@ -373,35 +337,15 @@
                             </div>
                             <form method="POST"
                                 action="{{ route('admin.applications.revertPayment', $application->id) }}">@csrf
-                                @method('PATCH')<button type="submit"
-                                    class="group relative flex items-center justify-center px-5 py-2.5 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer">
-                                    <div class="absolute inset-0 topo-bg opacity-40"></div>
-                                    <div
-                                        class="absolute inset-0 bg-white/60 backdrop-blur-[2px] group-hover:backdrop-blur-[4px] transition-all duration-300">
-                                    </div>
-                                    <div
-                                        class="absolute inset-0 rounded-xl border border-white/60 border-b-2 border-b-gray-200/50">
-                                    </div><span
-                                        class="relative z-10 text-gray-900 font-bold text-sm flex items-center"><span
-                                            class="material-symbols-rounded mr-2 text-[18px] text-gray-500 group-hover:text-school-primary group-hover:-translate-x-0.5 transition-all duration-300">undo</span>Zrušit
-                                        potvrzení</span>
-                                </button></form>
+                                @method('PATCH')<x-button as="button" type="submit"
+                                    text="Zrušit potvrzení" icon="undo"
+                                    iconAnimation="back" variant="secondary" size="md" /></form>
                         @elseif ($canAcceptPayment)
                             <form method="POST"
                                 action="{{ route('admin.applications.acceptPayment', $application->id) }}">@csrf
-                                @method('PATCH')<button type="submit"
-                                    class="group relative flex items-center justify-center px-5 py-2.5 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer">
-                                    <div class="absolute inset-0 topo-bg opacity-40"></div>
-                                    <div
-                                        class="absolute inset-0 bg-white/60 backdrop-blur-[2px] group-hover:backdrop-blur-[4px] transition-all duration-300">
-                                    </div>
-                                    <div
-                                        class="absolute inset-0 rounded-xl border border-white/60 border-b-2 border-b-gray-200/50">
-                                    </div><span
-                                        class="relative z-10 text-gray-900 font-bold text-sm flex items-center"><span
-                                            class="material-symbols-rounded mr-2 text-[18px] text-gray-500 group-hover:text-school-primary transition-colors">check_circle</span>Potvrdit
-                                        platbu</span>
-                                </button></form>
+                                @method('PATCH')<x-button as="button" type="submit"
+                                    text="Potvrdit platbu" icon="check_circle"
+                                    variant="secondary" size="md" /></form>
                         @elseif (!$application->submitted)
                             <span class="text-sm text-gray-400 font-medium">Před ověřením musí uchazeč nejprve odeslat
                                 přihlášku.</span>
@@ -415,35 +359,17 @@
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <a href="{{ route('admin.applications.export.csv', $application->id) }}"
-                    class="group relative flex items-center justify-center px-6 py-4 rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 min-h-[72px]">
-                    <div class="absolute inset-0 topo-bg opacity-50 transition-opacity duration-300"></div>
-                    <div
-                        class="absolute inset-0 bg-white/60 backdrop-blur-[2px] group-hover:backdrop-blur-[4px] transition-all duration-300">
-                    </div>
-                    <div class="absolute inset-0 rounded-2xl border border-white/60 border-b-4 border-b-gray-200/50"></div>
-                    <span
-                        class="relative z-10 text-gray-900 font-bold text-base flex items-center justify-center whitespace-nowrap">
-                        <span
-                            class="material-symbols-rounded mr-3 text-[22px] text-gray-500 group-hover:text-school-primary transition-colors">table_view</span>
-                        Export CSV
-                    </span>
-                </a>
+                <x-button as="a"
+                    href="{{ route('admin.applications.export.csv', $application->id) }}"
+                    text="Export CSV" icon="table_view"
+                    variant="primary" size="wide" rounded="2xl"
+                    extraClass="min-h-[72px]" />
 
-                <a href="{{ route('admin.applications.export.pdf', $application->id) }}"
-                    class="group relative flex items-center justify-center px-6 py-4 rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 min-h-[72px]">
-                    <div class="absolute inset-0 topo-bg opacity-50 transition-opacity duration-300"></div>
-                    <div
-                        class="absolute inset-0 bg-white/60 backdrop-blur-[2px] group-hover:backdrop-blur-[4px] transition-all duration-300">
-                    </div>
-                    <div class="absolute inset-0 rounded-2xl border border-white/60 border-b-4 border-b-gray-200/50"></div>
-                    <span
-                        class="relative z-10 text-gray-900 font-bold text-base flex items-center justify-center whitespace-nowrap">
-                        <span
-                            class="material-symbols-rounded mr-3 text-[22px] text-gray-500 group-hover:text-school-primary transition-colors">picture_as_pdf</span>
-                        Export PDF
-                    </span>
-                </a>
+                <x-button as="a"
+                    href="{{ route('admin.applications.export.pdf', $application->id) }}"
+                    text="Export PDF" icon="picture_as_pdf"
+                    variant="primary" size="wide" rounded="2xl"
+                    extraClass="min-h-[72px]" />
             </div>
 
         </div>
@@ -527,7 +453,7 @@
 
                     @if ($application->completionDeadlinePassed() && !$application->applicantCompletionRequirementsMet())
                         <div class="mt-4 pt-4 border-t border-gray-100">
-                            <p class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Přesun do dalšího kola
+                            <p class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Přesun do jiného kola
                             </p>
 
                             @if ($availableMoveRounds->isNotEmpty())
@@ -555,91 +481,19 @@
                                             </div>
                                         @enderror
                                     </div>
-                                    <button type="submit"
-                                        class="group relative inline-flex items-center justify-center px-5 py-3 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer">
-                                        <div class="absolute inset-0 topo-bg opacity-40"></div>
-                                        <div
-                                            class="absolute inset-0 bg-white/60 backdrop-blur-[2px] group-hover:backdrop-blur-[4px] transition-all duration-300">
-                                        </div>
-                                        <div
-                                            class="absolute inset-0 rounded-xl border border-white/60 border-b-2 border-b-gray-200/50">
-                                        </div>
-                                        <span class="relative z-10 text-gray-900 font-bold text-sm flex items-center"><span
-                                                class="material-symbols-rounded mr-2 text-[18px] text-gray-500 group-hover:text-school-primary transition-colors">redo</span>Přesunout
-                                            do dalšího kola</span>
-                                    </button>
+                                    <x-button as="button" type="submit"
+                                        text="Přesunout do vybraného kola" icon="redo"
+                                        variant="secondary" size="md" />
                                 </form>
                             @else
-                                <p class="text-sm text-gray-500">Pro tuto přihlášku zatím není připravené žádné další
+                                <p class="text-sm text-gray-500">Pro tuto přihlášku zatím není připravené žádné jiné
                                     přijímací kolo.</p>
                             @endif
                         </div>
                     @endif
                 </div>
             </div>
-        </div>
-    </div>
-
-    <div x-show="statusLegendOpen" x-transition.opacity
-        class="fixed inset-0 z-[70] flex items-center justify-center px-4 py-6" style="display: none;">
-        <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm" @click="statusLegendOpen = false"></div>
-        <div
-            class="relative w-full max-w-lg bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/60 ring-1 ring-black/5 overflow-hidden">
-            <div class="flex items-start justify-between gap-4 px-6 py-5 border-b border-gray-100">
-                <div>
-                    <h3 class="text-lg font-bold text-gray-900">Vysvětlení stavů</h3>
-                    <p class="text-sm text-gray-500 mt-1">Co znamenají ikony ve stavovém panelu přihlášky.</p>
-                </div>
-                <button type="button" @click="statusLegendOpen = false"
-                    class="inline-flex h-9 w-9 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
-                    aria-label="Zavřít">
-                    <span class="material-symbols-rounded text-[20px]">close</span>
-                </button>
-            </div>
-            <div class="px-6 py-5 space-y-4">
-                <div class="flex items-start gap-3">
-                    <span class="material-symbols-rounded text-green-500 text-[20px]">check_circle</span>
-                    <div>
-                        <p class="font-bold text-sm text-gray-900">Splněno</p>
-                        <p class="text-sm text-gray-500">Část přihlášky je vyplněná nebo potvrzená.</p>
-                    </div>
-                </div>
-                <div class="flex items-start gap-3">
-                    <span class="material-symbols-rounded text-blue-400 text-[20px]">pending</span>
-                    <div>
-                        <p class="font-bold text-sm text-gray-900">Čeká na školu</p>
-                        <p class="text-sm text-gray-500">Údaje nebo příloha jsou doplněné a čekají na kontrolu školy.</p>
-                    </div>
-                </div>
-                <div class="flex items-start gap-3">
-                    <span class="material-symbols-rounded text-orange-500 text-[20px]">error</span>
-                    <div>
-                        <p class="font-bold text-sm text-gray-900">Je potřeba doplnit</p>
-                        <p class="text-sm text-gray-500">Tato část ještě není hotová a můžete ji doplnit.</p>
-                    </div>
-                </div>
-                <div class="flex items-start gap-3">
-                    <span class="material-symbols-rounded text-gray-400 text-[20px]">lock</span>
-                    <div>
-                        <p class="font-bold text-sm text-gray-900">Uzamčeno</p>
-                        <p class="text-sm text-gray-500">Sekci už není možné upravovat.</p>
-                    </div>
-                </div>
-                <div class="flex items-start gap-3">
-                    <span class="material-symbols-rounded text-school-primary text-[20px]">cancel</span>
-                    <div>
-                        <p class="font-bold text-sm text-gray-900">Nesplněno po termínu</p>
-                        <p class="text-sm text-gray-500">Termín uplynul a část přihlášky nebyla dokončena včas.</p>
-                    </div>
-                </div>
-                <div class="flex items-start gap-3">
-                    <span class="material-symbols-rounded text-amber-500 text-[20px]">verified</span>
-                    <div>
-                        <p class="font-bold text-sm text-gray-900">Přihláška dokončena včas</p>
-                        <p class="text-sm text-gray-500">Všechny povinné části z vaší strany byly doplněny do termínu.</p>
-                    </div>
-                </div>
-            </div>
+            @include('components.status-legend')
         </div>
     </div>
 @endsection

@@ -204,7 +204,7 @@ class AdminController extends Controller
 
         if ($availableMoveRounds->isEmpty()) {
             return redirect()->route('admin.applications.show', $id)
-                ->with('error', 'Pro tuto přihlášku není k dispozici žádné další přijímací kolo.');
+                ->with('error', 'Pro tuto přihlášku není k dispozici žádné jiné přijímací kolo.');
         }
 
         $validated = $request->validate([
@@ -230,7 +230,7 @@ class AdminController extends Controller
         AuditLogger::log($request, AuditActionType::EDIT, $application->fresh(['round']), AuditLog::DESCRIPTION_MOVE_TO_FURTHER_ROUND);
 
         return redirect()->route('admin.applications.show', $id)
-            ->with('success', 'Přihláška byla přesunuta do dalšího kola.');
+            ->with('success', 'Přihláška byla přesunuta do jiného kola.');
     }
 
     public function updateEvidenceNumber(Request $request, $id)
@@ -498,8 +498,6 @@ class AdminController extends Controller
 
         return ApplicationRound::query()
             ->where('study_program_id', $application->study_program_id)
-            ->where('academic_year', $application->round->academic_year)
-            ->where('is_active', true)
             ->where('id', '!=', $application->round_id)
             ->where('completion_deadline_at', '>', $application->round->completion_deadline_at)
             ->orderBy('opens_at')

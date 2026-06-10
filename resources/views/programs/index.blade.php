@@ -3,19 +3,9 @@
 @section('title', 'Studijní programy | VOŠ OAUH')
 
 @section('header-left')
-    <a href="{{ Auth::check() ? route('dashboard') : route('home') }}"
-        class="group relative flex items-center justify-center px-4 py-2 rounded-xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300">
-        <div class="absolute inset-0 topo-bg opacity-50 transition-opacity duration-300"></div>
-        <div
-            class="absolute inset-0 bg-white/60 backdrop-blur-[2px] group-hover:backdrop-blur-[4px] transition-all duration-300">
-        </div>
-        <div class="absolute inset-0 rounded-xl border border-white/60 border-b-4 border-b-gray-200/50"></div>
-        <span class="relative z-10 text-gray-600 font-bold text-sm flex items-center drop-shadow-sm">
-            <span
-                class="material-symbols-rounded mr-2 text-[18px] text-gray-600 group-hover:text-school-primary transition-transform duration-300 group-hover:-translate-x-1">arrow_back</span>
-            Zpět
-        </span>
-    </a>
+    <x-button as="a" href="{{ Auth::check() ? route('dashboard') : route('home') }}"
+        text="Zpět" icon="arrow_back" iconAnimation="back" size="sm"
+        spanClass="text-gray-600" />
 @endsection
 
 @section('content')
@@ -264,22 +254,10 @@
 
                         <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 mt-auto">
                             @if ($canApply)
-                                <a href="{{ route('application.create', $program->id) }}"
-                                    class="group/btn relative flex-grow flex items-center justify-center px-8 py-4 rounded-xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer">
-                                    <div class="absolute inset-0 topo-bg opacity-50 transition-opacity duration-300"></div>
-                                    <div
-                                        class="absolute inset-0 bg-white/60 backdrop-blur-[2px] group-hover/btn:backdrop-blur-[4px] transition-all duration-300">
-                                    </div>
-                                    <div
-                                        class="absolute inset-0 rounded-xl border border-white/60 border-b-4 border-b-gray-200/50">
-                                    </div>
-                                    <span
-                                        class="relative z-10 text-gray-900 font-bold text-base flex items-center drop-shadow-sm">
-                                        Podat přihlášku
-                                        <span
-                                            class="material-symbols-rounded ml-3 text-[20px] text-gray-600 group-hover/btn:text-school-primary transition-transform duration-300 group-hover/btn:translate-x-1">arrow_forward</span>
-                                    </span>
-                                </a>
+                                <x-button as="a" href="{{ route('application.create', $program->id) }}"
+                                    text="Podat přihlášku" icon="arrow_forward"
+                                    iconPosition="right" iconAnimation="forward"
+                                    size="wide" extraClass="flex-grow" />
                             @elseif ($nextRound)
                                 <div
                                     class="flex-grow flex items-center justify-center px-8 py-4 rounded-xl bg-gray-100 border border-gray-200 cursor-not-allowed">

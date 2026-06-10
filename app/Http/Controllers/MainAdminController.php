@@ -23,7 +23,7 @@ class MainAdminController extends Controller
         $programs = StudyProgram::with([
             'applicationRounds' => fn($query) => $query->orderByDesc('opens_at'),
         ])
-            ->withCount(['applications', 'applicationRounds'])
+            ->withCount(['applications', 'applicationRounds' => fn($q) => $q->where('academic_year', date('Y') . '/' . (date('Y') + 1))])
             ->orderByDesc('is_active')
             ->orderBy('name')
             ->get();

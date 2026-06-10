@@ -33,19 +33,10 @@
                     <p class="text-lg font-bold text-gray-900 break-all mb-1">{{ $admin->email }}</p>
                     <p class="text-sm text-gray-500">E-mailová adresa, pomocí které se přihlašujete.</p>
                 </div>
-                <button onclick="openModal('email-modal')"
-                    class="group relative flex items-center justify-center px-5 py-2.5 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer self-start">
-                    <div class="absolute inset-0 topo-bg opacity-40"></div>
-                    <div
-                        class="absolute inset-0 bg-white/60 backdrop-blur-[2px] group-hover:backdrop-blur-[4px] transition-all duration-300">
-                    </div>
-                    <div class="absolute inset-0 rounded-xl border border-white/60 border-b-2 border-b-gray-200/50"></div>
-                    <span class="relative z-10 text-gray-700 font-bold text-sm flex items-center">
-                        <span
-                            class="material-symbols-rounded mr-2 text-[18px] text-gray-500 group-hover:text-school-primary transition-colors">edit</span>
-                        Změnit e-mail
-                    </span>
-                </button>
+                <x-button as="button" onclick="openModal('email-modal')"
+                    text="Změnit e-mail" icon="edit"
+                    variant="secondary" size="md"
+                    extraClass="self-start" spanClass="text-gray-700" />
             </div>
 
             <div class="p-8 flex flex-col justify-between gap-5">
@@ -64,19 +55,10 @@
                         <p class="text-sm text-gray-500 mt-1">Bez hesla se přihlašujete pouze odkazem z e-mailu.</p>
                     @endif
                 </div>
-                <button onclick="openModal('password-modal')"
-                    class="group relative flex items-center justify-center px-5 py-2.5 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer self-start">
-                    <div class="absolute inset-0 topo-bg opacity-40"></div>
-                    <div
-                        class="absolute inset-0 bg-white/60 backdrop-blur-[2px] group-hover:backdrop-blur-[4px] transition-all duration-300">
-                    </div>
-                    <div class="absolute inset-0 rounded-xl border border-white/60 border-b-2 border-b-gray-200/50"></div>
-                    <span class="relative z-10 text-gray-700 font-bold text-sm flex items-center">
-                        <span
-                            class="material-symbols-rounded mr-2 text-[18px] text-gray-500 group-hover:text-school-primary transition-colors">lock_reset</span>
-                        {{ $admin->password ? 'Změnit heslo' : 'Vytvořit heslo' }}
-                    </span>
-                </button>
+                <x-button as="button" onclick="openModal('password-modal')"
+                    text="{{ $admin->password ? 'Změnit heslo' : 'Vytvořit heslo' }}" icon="lock_reset"
+                    variant="secondary" size="md"
+                    extraClass="self-start" spanClass="text-gray-700" />
             </div>
         </div>
     </div>
@@ -110,20 +92,8 @@
                             </div>
                         @enderror
                     </div>
-                    <button type="submit"
-                        class="group relative w-full flex items-center justify-center px-8 py-4 rounded-xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer">
-                        <div class="absolute inset-0 topo-bg opacity-50 transition-opacity duration-300"></div>
-                        <div
-                            class="absolute inset-0 bg-white/60 backdrop-blur-[2px] group-hover:backdrop-blur-[4px] transition-all duration-300">
-                        </div>
-                        <div class="absolute inset-0 rounded-xl border border-white/60 border-b-4 border-b-gray-200/50">
-                        </div>
-                        <span class="relative z-10 text-gray-900 font-bold text-base flex items-center drop-shadow-sm">
-                            <span
-                                class="material-symbols-rounded mr-2 text-[20px] text-gray-600 group-hover:text-school-primary transition-colors">save</span>
-                            Uložit změny
-                        </span>
-                    </button>
+                    <x-button as="button" type="submit" text="Uložit změny"
+                        icon="save" fullWidth size="wide" />
                 </form>
             </div>
         </div>
@@ -170,20 +140,8 @@
                                 class="w-full rounded-xl border border-gray-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-school-primary focus:border-school-primary bg-white/50 pl-10 py-3 text-sm placeholder-gray-400">
                         </div>
                     </div>
-                    <button type="submit"
-                        class="group relative w-full flex items-center justify-center px-8 py-4 rounded-xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer">
-                        <div class="absolute inset-0 topo-bg opacity-50 transition-opacity duration-300"></div>
-                        <div
-                            class="absolute inset-0 bg-white/60 backdrop-blur-[2px] group-hover:backdrop-blur-[4px] transition-all duration-300">
-                        </div>
-                        <div class="absolute inset-0 rounded-xl border border-white/60 border-b-4 border-b-gray-200/50">
-                        </div>
-                        <span class="relative z-10 text-gray-900 font-bold text-base flex items-center drop-shadow-sm">
-                            <span
-                                class="material-symbols-rounded mr-2 text-[20px] text-gray-600 group-hover:text-school-primary transition-colors">save</span>
-                            Uložit heslo
-                        </span>
-                    </button>
+                    <x-button as="button" type="submit" text="Uložit heslo"
+                        icon="save" fullWidth size="wide" />
                 </form>
             </div>
         </div>

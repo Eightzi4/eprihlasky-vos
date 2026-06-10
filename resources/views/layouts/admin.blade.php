@@ -96,20 +96,10 @@
                 </div>
                 <form method="POST" action="{{ route('admin.logout') }}">
                     @csrf
-                    <button type="submit"
-                        class="group relative flex items-center justify-center px-3 py-2 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer border border-transparent hover:border-gray-200">
-                        <div class="absolute inset-0 topo-bg opacity-30 transition-opacity duration-300"></div>
-                        <div
-                            class="absolute inset-0 bg-white/60 backdrop-blur-[2px] group-hover:backdrop-blur-[4px] transition-all duration-300">
-                        </div>
-                        <div class="absolute inset-0 rounded-xl border border-white/60 border-b-2 border-b-gray-200/50">
-                        </div>
-                        <span class="relative z-10 text-gray-600 font-bold text-xs flex items-center gap-1.5">
-                            <span
-                                class="material-symbols-rounded text-[18px] group-hover:text-school-primary group-hover:-translate-x-1 transition-all duration-300">logout</span>
-                            <span class="hidden sm:inline">Odhlásit se</span>
-                        </span>
-                    </button>
+                    <x-button as="button" type="submit" text='<span class="hidden sm:inline">Odhlásit se</span>'
+                        icon="logout" iconAnimation="back" variant="ghost" size="xs"
+                        extraClass="border border-transparent hover:border-gray-200"
+                        spanClass="text-gray-600 gap-1.5" />
                 </form>
             </div>
         </div>
