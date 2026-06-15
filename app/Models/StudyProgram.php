@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class StudyProgram extends Model
 {
     public const DEFAULT_INFO_URL = 'https://www.oauh.cz/ekonomicko-pravni-cinnost-68-41-n-03.htm';
+    public const DEFAULT_VARIABLE_SYMBOL = '202600';
 
     protected $fillable = [
         'name',
@@ -17,6 +18,7 @@ class StudyProgram extends Model
         'language',
         'location',
         'tuition_fee',
+        'variable_symbol',
         'description',
         'image_path',
         'info_url',

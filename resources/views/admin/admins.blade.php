@@ -18,8 +18,10 @@
                 'email' => $admin->email,
                 'is_main_admin' => $admin->is_main_admin,
                 'is_self' => $admin->id === $currentAdminId,
+                'has_2fa' => $admin->hasTwoFactorEnabled(),
                 'edit_modal' => 'edit-admin-' . $admin->id,
                 'delete_url' => route('admin.admins.destroy', $admin),
+                'reset_2fa_url' => route('admin.admins.reset-two-factor', $admin),
             ])) }},
             searchTerm: '',
             sortColumn: 'id',
@@ -44,6 +46,7 @@
             },
             valueForSort(admin, column) {
                 if (column === 'role') return admin.is_main_admin ? 0 : 1;
+                if (column === 'has_2fa') return admin.has_2fa ? 0 : 1;
                 return admin[column];
             },
             sortBy(column) {
@@ -94,7 +97,7 @@
                     <table class="w-full min-w-full divide-y divide-gray-100">
                         <thead class="bg-gray-50/50">
                             <tr>
-                                @foreach ([['id' => 'id', 'label' => 'ID'], ['id' => 'name', 'label' => 'Jméno'], ['id' => 'email', 'label' => 'E-mail'], ['id' => 'role', 'label' => 'Role']] as $th)
+                                @foreach ([['id' => 'id', 'label' => 'ID'], ['id' => 'name', 'label' => 'Jméno'], ['id' => 'email', 'label' => 'E-mail'], ['id' => 'role', 'label' => 'Role'], ['id' => 'has_2fa', 'label' => '2FA']] as $th)
                                     <th class="px-5 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none transition-colors"
                                         @click="sortBy('{{ $th['id'] }}')">
                                         <div class="flex items-center gap-1">
@@ -109,7 +112,7 @@
                         <tbody class="divide-y divide-gray-50">
                             <template x-if="filteredAdmins.length === 0">
                                 <tr>
-                                    <td colspan="5" class="px-6 py-16 text-center text-gray-400">
+                                    <td colspan="6" class="px-6 py-16 text-center text-gray-400">
                                         <span class="material-symbols-rounded text-[48px] block mb-2 opacity-30">search_off</span>
                                         Nebyl nalezen žádný administrátorský účet.
                                     </td>
@@ -128,10 +131,29 @@
                                             <span x-text="admin.is_main_admin ? 'Hlavní administrátor' : 'Administrátor'"></span>
                                         </span>
                                     </td>
+                                    <td class="px-5 py-4 whitespace-nowrap text-sm">
+                                        <span x-show="admin.has_2fa" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-green-50 text-green-700 border border-green-200">
+                                            <span class="material-symbols-rounded text-[14px]">verified_user</span>
+                                            Aktivní
+                                        </span>
+                                        <span x-show="!admin.has_2fa" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-gray-50 text-gray-400 border border-gray-200">
+                                            <span class="material-symbols-rounded text-[14px]">gpp_maybe</span>
+                                            Neaktivní
+                                        </span>
+                                    </td>
                                     <td class="px-5 py-4 whitespace-nowrap">
                                         <div x-show="!admin.is_self" class="flex items-center gap-2">
                                             <x-button as="button" click="openModal(admin.edit_modal)"
                                                 icon="edit" variant="ghost" size="icon-only" />
+
+                                            <form x-show="admin.has_2fa" method="POST" :action="admin.reset_2fa_url"
+                                                onsubmit="return confirm('Opravdu chcete resetovat dvoufázové ověření pro tohoto administrátora? Bude si muset nastavit nové heslo a 2FA.');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <x-button as="button" type="submit" icon="lock_reset"
+                                                    variant="ghost" size="icon-only"
+                                                    extraClass="text-amber-500 hover:text-amber-700" />
+                                            </form>
 
                                             <form method="POST" :action="admin.delete_url" onsubmit="return confirm('Opravdu chcete odstranit tento administrátorský účet?');">
                                                 @csrf

@@ -8,7 +8,19 @@
         $isLocked = $application->isPaymentSectionLocked() || $application->payment_accepted;
         $applicationFee = number_format($settings->application_fee, 0, ',', ' ') . ' Kč';
         $bankAccount = $settings->bank_account;
-        $vs = $settings->variable_symbol;
+        $iban = strtoupper(str_replace(' ', '', $bankAccount));
+        $displayAccount = $iban;
+        if (preg_match('/^CZ\d{22}$/', $iban)) {
+            $bank    = substr($iban, 4, 4);
+            $prefix  = ltrim(substr($iban, 8, 6), '0');
+            $account = ltrim(substr($iban, 14, 10), '0');
+            $displayAccount = $prefix ? "{$prefix}-{$account}/{$bank}" : "{$account}/{$bank}";
+        }
+
+        $vs = $variableSymbol;
+        $amount = (int) $settings->application_fee;
+        $spd = 'SPD*1.0*ACC:' . $iban . '*AM:' . $amount . '*CC:CZK*X-VS:' . $vs;
+        $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=' . urlencode($spd);
     @endphp
 
     <div x-data="{
@@ -55,18 +67,26 @@
                     </p>
                 </div>
 
-                <div class="bg-gray-50 rounded-2xl p-5 mb-6 space-y-3 text-sm border border-gray-100">
-                    <div class="flex justify-between">
-                        <span class="text-gray-500">Částka</span>
-                        <span class="font-bold text-gray-900">{{ $applicationFee }}</span>
+                <div class="flex flex-col sm:flex-row gap-6 mb-6">
+                    <div class="flex-1 space-y-3">
+                        <div>
+                            <span class="text-xs font-bold text-gray-400 uppercase tracking-wide">Částka</span>
+                            <p class="text-lg font-bold text-gray-900 font-mono">{{ $applicationFee }}</p>
+                        </div>
+                        <div>
+                            <span class="text-xs font-bold text-gray-400 uppercase tracking-wide">Číslo účtu</span>
+                            <p class="text-base font-bold text-gray-900 font-mono">{{ $displayAccount }}</p>
+                        </div>
+                        <div>
+                            <span class="text-xs font-bold text-gray-400 uppercase tracking-wide">Variabilní symbol</span>
+                            <p class="text-base font-bold text-gray-900 font-mono">{{ $vs }}</p>
+                        </div>
                     </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-500">Číslo účtu</span>
-                        <span class="font-bold text-gray-900 font-mono">{{ $bankAccount }}</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-500">Variabilní symbol</span>
-                        <span class="font-bold text-gray-900 font-mono">{{ $vs }}</span>
+
+                    <div class="flex-shrink-0 flex flex-col items-center">
+                        <p class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">QR platba</p>
+                        <img src="{{ $qrUrl }}" alt="QR platba" class="w-40 h-40 rounded-xl bg-white p-1.5 border border-gray-200 shadow-sm">
+                        <p class="text-[10px] text-gray-400 mt-2 text-center leading-tight">Naskenujte v mobilním<br>bankovnictví</p>
                     </div>
                 </div>
 

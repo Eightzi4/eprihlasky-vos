@@ -77,11 +77,13 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::prefix('admin')->name('admin.')->group(function () {
-    Route::get('/login',            [AdminController::class, 'showLogin'])->name('login');
-    Route::post('/login',           [AdminController::class, 'handleEmail'])->name('login.post');
-    Route::post('/login/password',  [AdminController::class, 'loginWithPassword'])->name('login.password');
-    Route::post('/login/send-link', [AdminController::class, 'sendLink'])->name('login.send-link');
-    Route::get('/login/verify',     [AdminController::class, 'verifyTicket'])->name('login.verify');
+    Route::get('/login',              [AdminController::class, 'showLogin'])->name('login');
+    Route::post('/login',             [AdminController::class, 'handleEmail'])->name('login.post');
+    Route::post('/login/password',    [AdminController::class, 'loginWithPassword'])->name('login.password');
+    Route::post('/login/send-link',   [AdminController::class, 'sendLink'])->name('login.send-link');
+    Route::get('/login/verify',       [AdminController::class, 'verifyTicket'])->name('login.verify');
+    Route::get('/login/two-factor',   [AdminController::class, 'showTwoFactorChallenge'])->name('login.two-factor');
+    Route::post('/login/two-factor',  [AdminController::class, 'verifyTwoFactor'])->name('login.two-factor.verify');
 
     Route::middleware(App\Http\Middleware\IsAdmin::class)->group(function () {
         Route::post('/logout', [AdminController::class, 'logout'])->name('logout');
@@ -102,8 +104,15 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::patch('/applications/{id}/accept-education', [AdminController::class, 'acceptEducation'])->name('applications.acceptEducation');
         Route::patch('/applications/{id}/revert-education', [AdminController::class, 'revertEducation'])->name('applications.revertEducation');
 
+        Route::get('/setup',               [AdminController::class, 'showSetup'])->name('setup');
+        Route::post('/setup',              [AdminController::class, 'storeSetup'])->name('setup.store');
+        Route::get('/setup/recovery',      [AdminController::class, 'showSetupRecovery'])->name('setup.recovery');
+
         Route::patch('/account/email',    [AdminController::class, 'updateEmail'])->name('account.email');
         Route::patch('/account/password', [AdminController::class, 'updatePassword'])->name('account.password');
+        Route::post('/account/two-factor',          [AdminController::class, 'enableTwoFactor'])->name('account.two-factor.enable');
+        Route::delete('/account/two-factor',         [AdminController::class, 'disableTwoFactor'])->name('account.two-factor.disable');
+        Route::post('/account/two-factor/recovery', [AdminController::class, 'regenerateRecoveryCodes'])->name('account.two-factor.recovery');
 
         Route::middleware(App\Http\Middleware\IsMainAdmin::class)->group(function () {
             Route::get('/rounds', [MainAdminController::class, 'rounds'])->name('rounds');
@@ -123,6 +132,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::post('/admins', [MainAdminController::class, 'storeAdmin'])->name('admins.store');
             Route::patch('/admins/{admin}', [MainAdminController::class, 'updateAdmin'])->name('admins.update');
             Route::delete('/admins/{admin}', [MainAdminController::class, 'destroyAdmin'])->name('admins.destroy');
+            Route::delete('/admins/{admin}/two-factor', [MainAdminController::class, 'resetAdminTwoFactor'])->name('admins.reset-two-factor');
         });
     });
 });

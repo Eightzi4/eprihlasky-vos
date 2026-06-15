@@ -59,10 +59,10 @@
             </div>
         </form>
 
-        <form action="{{ route('admin.login.send-link') }}" method="POST" class="mt-8 border-t border-gray-200/60 pt-6">
+        <form action="{{ route('admin.login.send-link') }}" method="POST" class="mt-8 border-t border-gray-200/60 pt-6 space-y-3">
             @csrf
             <input type="hidden" name="email" value="{{ $email }}">
-            <p class="text-xs text-gray-400 mb-2">Zapomněli jste heslo?</p>
+            <p class="text-xs text-gray-400">Zapomněli jste heslo nebo nemůžete použít ověřovací aplikaci?</p>
             <button type="submit"
                 class="text-sm font-bold text-school-primary hover:text-school-hover hover:underline transition-colors bg-transparent border-none cursor-pointer w-full text-center">
                 Odeslat odkaz na přihlášení do e-mailu

@@ -14,6 +14,7 @@ use App\Models\AuditActionType;
 use App\Models\AuditLog;
 use App\Models\StudyProgram;
 use App\Models\WebsiteSetting;
+use App\Services\TotpService;
 use App\Support\ApplicationStatusManager;
 use App\Support\AuditLogger;
 use Illuminate\Http\Request;
@@ -74,8 +75,17 @@ class AdminController extends Controller
             'email'    => $request->email,
             'password' => $request->password,
         ])) {
+            $admin = $this->guard()->user();
+
+            if ($admin->hasTwoFactorEnabled()) {
+                $request->session()->put('admin.two_factor.id', $admin->id);
+                $request->session()->put('admin.two_factor.remember', $request->boolean('remember'));
+                $this->guard()->logout();
+                return redirect()->route('admin.login.two-factor');
+            }
+
             $request->session()->regenerate();
-            AuditLogger::rememberSessionStart($request, $this->guard()->user());
+            AuditLogger::rememberSessionStart($request, $admin);
             return redirect()->route('admin.dashboard');
         }
 
@@ -110,8 +120,16 @@ class AdminController extends Controller
             return redirect()->route('admin.login')->with('error', 'Neplatný nebo expirovaný odkaz.');
         }
 
-        $this->guard()->login($ticket->admin);
         $ticket->update(['used_at' => now()]);
+
+        if (! $ticket->admin->password) {
+            $this->guard()->login($ticket->admin);
+            $request->session()->regenerate();
+            AuditLogger::rememberSessionStart($request, $ticket->admin);
+            return redirect()->route('admin.setup');
+        }
+
+        $this->guard()->login($ticket->admin);
         $request->session()->regenerate();
         AuditLogger::rememberSessionStart($request, $ticket->admin);
 
@@ -124,6 +142,225 @@ class AdminController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
         return redirect()->route('admin.login');
+    }
+
+    public function showTwoFactorChallenge(Request $request)
+    {
+        if (! $request->session()->has('admin.two_factor.id')) {
+            return redirect()->route('admin.login');
+        }
+
+        return view('admin.login-two-factor');
+    }
+
+    public function verifyTwoFactor(Request $request, TotpService $totp)
+    {
+        $adminId = $request->session()->get('admin.two_factor.id');
+
+        if (! $adminId) {
+            return redirect()->route('admin.login');
+        }
+
+        $admin = Admin::findOrFail($adminId);
+
+        $request->validate([
+            'code' => 'required|string',
+        ]);
+
+        $code = $request->input('code');
+
+        $attemptsKey = 'two_factor_attempts:' . $admin->id;
+        $attempts = (int) cache()->get($attemptsKey, 0);
+
+        if ($attempts >= 5) {
+            $request->session()->forget(['admin.two_factor.id', 'admin.two_factor.remember']);
+            return redirect()->route('admin.login')->with('error', 'Příliš mnoho pokusů. Zkuste to znovu později.');
+        }
+
+        if ($totp->verifyRecoveryCode($admin, $code) !== false) {
+            $remaining = $totp->verifyRecoveryCode($admin, $code);
+            $admin->setRecoveryCodes($remaining);
+            $admin->save();
+            return $this->completeTwoFactorLogin($request, $admin);
+        }
+
+        if (! $admin->hasTwoFactorEnabled() || ! $totp->verify($admin->two_factor_secret, $code)) {
+            cache()->put($attemptsKey, $attempts + 1, now()->addMinutes(5));
+            $remaining = 5 - ($attempts + 1);
+            return back()->withErrors([
+                'code' => $remaining > 0
+                    ? "Neplatný kód. Zbývá {$remaining} pokusů."
+                    : 'Příliš mnoho pokusů. Zkuste to znovu později.',
+            ]);
+        }
+
+        return $this->completeTwoFactorLogin($request, $admin);
+    }
+
+    private function completeTwoFactorLogin(Request $request, Admin $admin)
+    {
+        $request->session()->forget(['admin.two_factor.id', 'admin.two_factor.remember']);
+
+        $this->guard()->login($admin, $request->session()->get('admin.two_factor.remember', false));
+        $request->session()->regenerate();
+        AuditLogger::rememberSessionStart($request, $admin);
+
+        return redirect()->route('admin.dashboard');
+    }
+
+    public function showSetup(Request $request, TotpService $totp)
+    {
+        $admin = $this->guard()->user();
+
+        if (! $admin) {
+            return redirect()->route('admin.login');
+        }
+
+        if ($admin->password && $admin->hasTwoFactorEnabled()) {
+            return redirect()->route('admin.dashboard');
+        }
+
+        if (! $request->session()->has('admin.setup.two_factor_secret')) {
+            $secret = $totp->generateSecret();
+            $request->session()->put('admin.setup.two_factor_secret', $secret);
+        } else {
+            $secret = $request->session()->get('admin.setup.two_factor_secret');
+        }
+
+        $issuer = config('app.name', 'E-prihlaska');
+        $qrUrl = $totp->generateQrCodeUrl($secret, $admin->email, $issuer);
+        $qrImageUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' . urlencode($qrUrl);
+
+        return view('admin.setup', compact('qrUrl', 'qrImageUrl', 'secret'));
+    }
+
+    public function storeSetup(Request $request, TotpService $totp)
+    {
+        $admin = $this->guard()->user();
+
+        if (! $admin) {
+            return redirect()->route('admin.login');
+        }
+
+        $request->validate([
+            'password'              => ['required', 'string', 'min:8', 'confirmed'],
+            'two_factor_code'       => ['required', 'string'],
+            'two_factor_secret'     => ['required', 'string'],
+        ]);
+
+        $secret = $request->input('two_factor_secret');
+
+        if (! $totp->verify($secret, $request->input('two_factor_code'))) {
+            return back()->withErrors([
+                'two_factor_code' => 'Neplatný ověřovací kód. Zkontrolujte, zda jste naskenovali správný QR kód a zkuste to znovu.',
+            ])->withInput();
+        }
+
+        $recoveryCodes = $totp->generateRecoveryCodesWithHashes();
+
+        $admin->update([
+            'password'                  => Hash::make($request->input('password')),
+            'two_factor_secret'         => $secret,
+            'two_factor_confirmed_at'   => now(),
+        ]);
+        $admin->setRecoveryCodes($recoveryCodes['hashed']);
+        $admin->save();
+
+        $request->session()->forget('admin.setup.two_factor_secret');
+        $request->session()->regenerate();
+        AuditLogger::rememberSessionStart($request, $admin);
+
+        return redirect()->route('admin.setup.recovery')
+            ->with('recovery_codes', $recoveryCodes['plain']);
+    }
+
+    public function showSetupRecovery(Request $request)
+    {
+        if (! $request->session()->has('recovery_codes')) {
+            return redirect()->route('admin.dashboard');
+        }
+
+        $codes = $request->session()->get('recovery_codes');
+
+        return view('admin.recovery-codes', compact('codes'));
+    }
+
+    public function enableTwoFactor(Request $request, TotpService $totp)
+    {
+        $admin = $this->guard()->user();
+
+        if ($admin->hasTwoFactorEnabled()) {
+            return redirect()->route('admin.dashboard')->with('error', 'Dvoufázové ověření je již aktivní.');
+        }
+
+        $request->validate([
+            'two_factor_code'   => ['required', 'string'],
+            'two_factor_secret' => ['required', 'string'],
+        ]);
+
+        $secret = $request->input('two_factor_secret');
+
+        if (! $totp->verify($secret, $request->input('two_factor_code'))) {
+            return back()->withErrors([
+                'two_factor_code' => 'Neplatný ověřovací kód. Zkuste to znovu.',
+            ]);
+        }
+
+        $recoveryCodes = $totp->generateRecoveryCodesWithHashes();
+
+        $admin->update([
+            'two_factor_secret'       => $secret,
+            'two_factor_confirmed_at' => now(),
+        ]);
+        $admin->setRecoveryCodes($recoveryCodes['hashed']);
+        $admin->save();
+
+        return redirect()->route('admin.dashboard')
+            ->with('success', 'Dvoufázové ověření bylo aktivováno.')
+            ->with('recovery_codes', $recoveryCodes['plain'])
+            ->with('show_recovery_modal', true);
+    }
+
+    public function disableTwoFactor(Request $request, TotpService $totp)
+    {
+        $admin = $this->guard()->user();
+
+        if (! $admin->hasTwoFactorEnabled()) {
+            return redirect()->route('admin.dashboard')->with('error', 'Dvoufázové ověření není aktivní.');
+        }
+
+        $request->validate([
+            'password' => ['required', 'string'],
+        ]);
+
+        if (! Hash::check($request->input('password'), $admin->password)) {
+            return back()->withErrors([
+                'password' => 'Zadané heslo není správné.',
+            ]);
+        }
+
+        $admin->clearTwoFactor();
+        $admin->save();
+
+        return redirect()->route('admin.dashboard')->with('success', 'Dvoufázové ověření bylo deaktivováno.');
+    }
+
+    public function regenerateRecoveryCodes(Request $request, TotpService $totp)
+    {
+        $admin = $this->guard()->user();
+
+        if (! $admin->hasTwoFactorEnabled()) {
+            return redirect()->route('admin.dashboard')->with('error', 'Dvoufázové ověření není aktivní.');
+        }
+
+        $recoveryCodes = $totp->generateRecoveryCodesWithHashes();
+        $admin->setRecoveryCodes($recoveryCodes['hashed']);
+        $admin->save();
+
+        return redirect()->route('admin.dashboard')
+            ->with('success', 'Nové záložní kódy byly vygenerovány.')
+            ->with('recovery_codes', $recoveryCodes['plain'])
+            ->with('show_recovery_modal', true);
     }
 
     private function sendLoginTicket(Admin $admin): void

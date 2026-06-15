@@ -23,11 +23,10 @@
                 @foreach ([
             ['name' => 'application_fee', 'label' => 'Cena přihlášky', 'icon' => 'payments', 'type' => 'number', 'required' => true, 'value' => old('application_fee', $settings->application_fee), 'attributes' => 'min=0 step=1'],
             ['name' => 'notification_email', 'label' => 'Notifikační e-mail', 'icon' => 'alternate_email', 'type' => 'email', 'required' => true, 'value' => old('notification_email', $settings->notification_email)],
-            ['name' => 'bank_account', 'label' => 'Číslo účtu', 'icon' => 'account_balance', 'type' => 'text', 'required' => true, 'value' => old('bank_account', $settings->bank_account)],
-            ['name' => 'variable_symbol', 'label' => 'Variabilní symbol', 'icon' => 'tag', 'type' => 'text', 'required' => true, 'value' => old('variable_symbol', $settings->variable_symbol)],
-            ['name' => 'applicant_notification_delay_minutes', 'label' => 'Prodleva notifikace uchazeči (min)', 'icon' => 'schedule_send', 'type' => 'number', 'required' => true, 'value' => old('applicant_notification_delay_minutes', $settings->applicant_notification_delay_minutes), 'attributes' => 'min=0 step=1'],
+            ['name' => 'bank_account', 'label' => 'Číslo účtu (IBAN)', 'icon' => 'account_balance', 'type' => 'text', 'required' => true, 'value' => old('bank_account', $settings->bank_account), 'attributes' => 'placeholder=CZ0000000000000000000000 maxlength=34'],
+            ['name' => 'applicant_notification_delay_minutes', 'label' => 'Prodleva notifikace (min)', 'icon' => 'schedule_send', 'type' => 'number', 'required' => true, 'value' => old('applicant_notification_delay_minutes', $settings->applicant_notification_delay_minutes), 'attributes' => 'min=0 step=1'],
         ] as $field)
-                    <div class="{{ $field['name'] === 'applicant_notification_delay_minutes' ? 'md:col-span-2' : '' }}">
+                    <div>
                         <label for="{{ $field['name'] }}"
                             class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">{{ $field['label'] }}</label>
                         <div class="relative">

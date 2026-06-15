@@ -58,14 +58,12 @@ class MainAdminController extends Controller
         $validated = $request->validate([
             'application_fee' => ['required', 'integer', 'min:0', 'max:999999'],
             'notification_email' => ['required', 'email', 'max:255'],
-            'bank_account' => ['required', 'string', 'max:255'],
-            'variable_symbol' => ['required', 'string', 'max:50'],
+            'bank_account' => ['required', 'string', 'max:34', 'regex:/^CZ\d{22}$/i'],
             'applicant_notification_delay_minutes' => ['required', 'integer', 'min:0', 'max:10080'],
         ], [], [
             'application_fee' => 'cena přihlášky',
             'notification_email' => 'notifikační e-mail',
             'bank_account' => 'číslo účtu',
-            'variable_symbol' => 'variabilní symbol',
             'applicant_notification_delay_minutes' => 'prodleva notifikace uchazeči',
         ]);
 
@@ -238,6 +236,17 @@ class MainAdminController extends Controller
         return redirect()->route('admin.admins')->with('success', 'Administrátorský účet byl odstraněn.');
     }
 
+    public function resetAdminTwoFactor(Admin $admin): RedirectResponse
+    {
+        $this->ensureNotSelf($admin);
+
+        $admin->clearTwoFactor();
+        $admin->update(['password' => null]);
+        $admin->save();
+
+        return redirect()->route('admin.admins')->with('success', 'Dvoufázové ověření administrátora ' . e($admin->name) . ' bylo resetováno. Administrátor si při příštím přihlášení nastaví nové heslo a 2FA.');
+    }
+
     private function ensureNotSelf(Admin $admin): void
     {
         if ($admin->is(Auth::guard('admin')->user())) {
@@ -256,6 +265,7 @@ class MainAdminController extends Controller
             'language' => ['required', 'string', 'max:255'],
             'location' => ['required', 'string', 'max:255'],
             'tuition_fee' => ['nullable', 'string', 'max:255'],
+            'variable_symbol' => ['nullable', 'string', 'max:50'],
             'description' => ['nullable', 'string'],
             'image_path' => ['nullable', 'string', 'max:2048'],
             'info_url' => ['required', 'url', 'max:2048'],
@@ -274,6 +284,7 @@ class MainAdminController extends Controller
             'language' => 'jazyk',
             'location' => 'místo studia',
             'tuition_fee' => 'školné',
+            'variable_symbol' => 'variabilní symbol',
             'description' => 'popis programu',
             'image_path' => 'obrázek programu',
             'info_url' => 'odkaz na více informací',
@@ -284,7 +295,7 @@ class MainAdminController extends Controller
     {
         $data['is_active'] = (bool) ($data['is_active'] ?? false);
 
-        foreach (['code', 'tuition_fee', 'description', 'image_path'] as $field) {
+        foreach (['code', 'tuition_fee', 'variable_symbol', 'description', 'image_path'] as $field) {
             if (array_key_exists($field, $data) && $data[$field] === '') {
                 $data[$field] = null;
             }

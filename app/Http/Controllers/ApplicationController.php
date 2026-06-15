@@ -359,11 +359,14 @@ class ApplicationController extends Controller
     {
         $application = Application::where('user_id', Auth::id())->findOrFail($id);
         $settings = WebsiteSetting::current();
+        $variableSymbol = $application->studyProgram?->variable_symbol
+            ?: StudyProgram::DEFAULT_VARIABLE_SYMBOL;
 
         return view('application.payment', [
             'application' => $application,
             'currentStep' => 4,
             'settings' => $settings,
+            'variableSymbol' => $variableSymbol,
         ]);
     }
 
