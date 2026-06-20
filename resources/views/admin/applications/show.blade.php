@@ -85,16 +85,21 @@
         <div class="lg:col-span-2 space-y-6">
             <div class="bg-white/80 backdrop-blur-xl rounded-3xl shadow-sm border border-white/60 p-6 ring-1 ring-black/5">
                 <form method="POST" action="{{ route('admin.applications.evidence-number', $application->id) }}"
-                    class="flex flex-col lg:flex-row lg:items-end gap-3">
+                    class="flex flex-col lg:flex-row lg:items-start gap-3">
                     @csrf
                     @method('PATCH')
                     <div class="flex-1 max-w-xl">
                         <label for="evidence_number"
-                            class="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Evidenční
-                            číslo</label>
-                        <input id="evidence_number" name="evidence_number" type="text"
-                            value="{{ old('evidence_number', $application->evidence_number) }}"
-                            class="w-full px-4 py-3 rounded-xl border {{ $errors->has('evidence_number') ? 'border-red-300 ring-2 ring-red-100' : 'border-gray-200' }} bg-white/80 text-gray-900 font-semibold shadow-sm focus:outline-none focus:ring-2 focus:ring-school-primary/20 focus:border-school-primary">
+                            class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Evidenční číslo</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <span class="material-symbols-rounded text-gray-400 text-[20px]">tag</span>
+                            </div>
+                            <input id="evidence_number" name="evidence_number" type="text"
+                                value="{{ old('evidence_number', $application->evidence_number) }}"
+                                placeholder="EV-0000"
+                                class="w-full rounded-xl border shadow-sm focus:outline-none focus:ring-2 focus:ring-school-primary focus:border-school-primary bg-white/50 pl-10 py-3 text-sm placeholder-gray-400 {{ $errors->has('evidence_number') ? 'border-school-warning ring-1 ring-school-warning/30' : 'border-gray-200' }}">
+                        </div>
                         @error('evidence_number')
                             <div class="flex items-center gap-1 mt-1.5 ml-1 text-school-warning">
                                 <span class="material-symbols-rounded text-[16px]">error</span>
@@ -104,7 +109,7 @@
                     </div>
                     <x-button as="button" type="submit" text="Uložit číslo"
                         icon="save" size="lg"
-                        extraClass="min-h-[52px]" />
+                        extraClass="min-h-[52px] mt-6" />
                 </form>
             </div>
 
@@ -358,18 +363,70 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <x-button as="a"
-                    href="{{ route('admin.applications.export.csv', $application->id) }}"
-                    text="Export CSV" icon="table_view"
-                    variant="primary" size="wide" rounded="2xl"
-                    extraClass="min-h-[72px]" />
+            <div
+                class="bg-white/80 backdrop-blur-xl rounded-3xl shadow-sm border border-white/60 p-6 sm:p-8 ring-1 ring-black/5">
+                <h2 class="text-xl font-bold text-gray-900 mb-5">Export dat</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <x-button as="a"
+                        href="{{ route('admin.applications.export.csv', $application->id) }}"
+                        text="Export CSV" icon="table_view"
+                        variant="secondary" size="wide"
+                        extraClass="min-h-[60px]" spanClass="text-gray-700" />
 
-                <x-button as="a"
-                    href="{{ route('admin.applications.export.pdf', $application->id) }}"
-                    text="Export PDF" icon="picture_as_pdf"
-                    variant="primary" size="wide" rounded="2xl"
-                    extraClass="min-h-[72px]" />
+                    <x-button as="a"
+                        href="{{ route('admin.applications.export.pdf', $application->id) }}"
+                        text="Export PDF" icon="picture_as_pdf"
+                        variant="secondary" size="wide"
+                        extraClass="min-h-[60px]" spanClass="text-gray-700" />
+
+                    <x-button as="button"
+                        onclick="openModal('zip-export-modal')"
+                        text="Exportovat ZIP" icon="folder_zip"
+                        variant="secondary" size="wide"
+                        extraClass="min-h-[60px]" spanClass="text-gray-700" />
+                </div>
+            </div>
+
+            <div id="zip-export-modal" class="fixed inset-0 z-50 hidden">
+                <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm" onclick="closeModal('zip-export-modal')"></div>
+                <div class="relative min-h-screen flex items-center justify-center p-4">
+                    <div class="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl w-full max-w-md p-8 relative border border-white/60 ring-1 ring-black/5">
+                        <button type="button" onclick="closeModal('zip-export-modal')"
+                            class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
+                            <span class="material-symbols-rounded text-[24px]">close</span>
+                        </button>
+                        <h2 class="text-2xl font-bold text-gray-900 mb-6">Exportovat ZIP</h2>
+                        <form method="POST" action="{{ route('admin.applications.export.zip', $application->id) }}" class="space-y-5">
+                            @csrf
+                            <p class="text-sm text-gray-500">Vyberte, co chcete zahrnout do ZIP archivu:</p>
+
+                            @foreach ([
+                                ['name' => 'csv', 'label' => 'CSV soubor', 'icon' => 'table_view'],
+                                ['name' => 'pdf', 'label' => 'PDF soubor', 'icon' => 'picture_as_pdf'],
+                                ['name' => 'education', 'label' => 'Doklady o vzdělání', 'icon' => 'school'],
+                                ['name' => 'payment', 'label' => 'Potvrzení o platbě', 'icon' => 'receipt_long'],
+                                ['name' => 'other', 'label' => 'Přílohy', 'icon' => 'attach_file'],
+                            ] as $opt)
+                                <label class="flex items-center gap-4 cursor-pointer group">
+                                    <div class="relative flex items-center flex-shrink-0">
+                                        <input type="checkbox" name="{{ $opt['name'] }}" value="1" checked
+                                            class="peer h-6 w-6 cursor-pointer appearance-none rounded-md border-2 border-gray-300 bg-white transition-all checked:border-school-primary checked:bg-school-primary hover:border-school-primary">
+                                        <span class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-white opacity-0 peer-checked:opacity-100 pointer-events-none">
+                                            <span class="material-symbols-rounded text-[18px] font-bold">check</span>
+                                        </span>
+                                    </div>
+                                    <div class="flex items-center gap-2 text-sm font-medium text-gray-700">
+                                        <span class="material-symbols-rounded text-gray-400 text-[20px]">{{ $opt['icon'] }}</span>
+                                        {{ $opt['label'] }}
+                                    </div>
+                                </label>
+                            @endforeach
+
+                            <x-button as="button" type="submit" text="Stáhnout ZIP"
+                                icon="download" fullWidth size="wide" />
+                        </form>
+                    </div>
+                </div>
             </div>
 
         </div>
@@ -496,4 +553,13 @@
             @include('components.status-legend')
         </div>
     </div>
+
+    <script>
+        function openModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+        }
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+    </script>
 @endsection

@@ -30,9 +30,8 @@
                         <span class="material-symbols-rounded text-gray-400 text-[20px]">pin</span>
                     </div>
                     <input type="text" name="code" required autofocus autocomplete="one-time-code"
-                        inputmode="numeric" pattern="[0-9]*" maxlength="6" minlength="6"
-                        placeholder="000 000"
-                        class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl leading-5 bg-white/50 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-school-primary focus:border-school-primary sm:text-sm transition-all shadow-sm tracking-[0.5em] text-center text-lg font-bold">
+                        placeholder="000 000 nebo HA8Z-2URZ-M6S6"
+                        class="block w-full pl-10 pr-3 py-3 border rounded-xl leading-5 bg-white/50 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-school-primary focus:border-school-primary sm:text-sm transition-all shadow-sm text-center text-lg font-bold font-mono @error('code') border-school-warning ring-1 ring-school-warning/30 @else border-gray-300 @enderror">
                 </div>
                 @error('code')
                     <div class="flex items-center gap-1 mt-1.5 ml-1 text-school-warning">

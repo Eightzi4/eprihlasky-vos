@@ -189,7 +189,7 @@ class AdminController extends Controller
             $remaining = 5 - ($attempts + 1);
             return back()->withErrors([
                 'code' => $remaining > 0
-                    ? "Neplatný kód. Zbývá {$remaining} pokusů."
+                    ? "Neplatný kód. Zbývající pokusy: {$remaining}"
                     : 'Příliš mnoho pokusů. Zkuste to znovu později.',
             ]);
         }
@@ -412,8 +412,9 @@ class AdminController extends Controller
             });
 
         $programs = StudyProgram::orderBy('name')->get();
+        $rounds = ApplicationRound::with('studyProgram')->orderBy('academic_year')->orderBy('label')->get();
 
-        return view('admin.applications.index', compact('applicationsData', 'programs'));
+        return view('admin.applications.index', compact('applicationsData', 'programs', 'rounds'));
     }
 
     public function showApplication($id)
@@ -519,6 +520,200 @@ class AdminController extends Controller
         ])->setPaper('a4');
 
         return $pdf->download('prihlaska-' . ($application->evidence_number ?: $application->application_number ?: $application->id) . '.pdf');
+    }
+
+    public function exportApplicationZip(Request $request, $id): Response
+    {
+        $application = $this->loadApplicationForExport($id);
+        $baseName = $application->evidence_number ?: $application->application_number ?: $application->id;
+
+        AuditLogger::log($request, AuditActionType::EXPORT, $application, AuditLog::DESCRIPTION_EXPORT_APPLICATION_CSV);
+
+        $zipPath = storage_path('app/temp/' . uniqid('export_', true) . '.zip');
+        $dir = dirname($zipPath);
+        if (! is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
+
+        $zip = new \ZipArchive();
+        if ($zip->open($zipPath, \ZipArchive::CREATE) !== true) {
+            abort(500, 'Nelze vytvořit ZIP archiv.');
+        }
+
+        if ($request->boolean('csv')) {
+            $columns = $this->csvColumns($application);
+            $csv = '';
+            $handle = fopen('php://temp', 'r+');
+            fwrite($handle, chr(0xEF) . chr(0xBB) . chr(0xBF));
+            fputcsv($handle, array_keys($columns), ';');
+            fputcsv($handle, array_values($columns), ';');
+            rewind($handle);
+            $csv = stream_get_contents($handle);
+            fclose($handle);
+            $zip->addFromString("{$baseName}.csv", $csv);
+        }
+
+        if ($request->boolean('pdf')) {
+            $pdf = Pdf::loadView('admin.applications.pdf', ['application' => $application])->setPaper('a4');
+            $zip->addFromString("{$baseName}.pdf", $pdf->output());
+        }
+
+        if ($request->boolean('education')) {
+            foreach ($application->attachments->whereIn('type', ['maturita', 'half_year_report']) as $attachment) {
+                $diskPath = Storage::disk('public')->path($attachment->disk_path);
+                if (file_exists($diskPath)) {
+                    $zip->addFile($diskPath, 'doklady-vzdelani/' . $attachment->filename);
+                }
+            }
+        }
+
+        if ($request->boolean('payment')) {
+            foreach ($application->attachments->where('type', 'payment') as $attachment) {
+                $diskPath = Storage::disk('public')->path($attachment->disk_path);
+                if (file_exists($diskPath)) {
+                    $zip->addFile($diskPath, 'platba/' . $attachment->filename);
+                }
+            }
+        }
+
+        if ($request->boolean('other')) {
+            foreach ($application->attachments->where('type', 'other') as $attachment) {
+                $diskPath = Storage::disk('public')->path($attachment->disk_path);
+                if (file_exists($diskPath)) {
+                    $zip->addFile($diskPath, 'prilohy/' . $attachment->filename);
+                }
+            }
+        }
+
+        $zip->close();
+
+        return response()->download($zipPath, "{$baseName}.zip")->deleteFileAfterSend();
+    }
+
+    public function bulkExportCsv(Request $request): Response
+    {
+        $ids = $this->validateBulkIds($request);
+        $applications = Application::with(['user', 'studyProgram', 'round'])->whereIn('id', $ids)->get();
+
+        return $this->bulkZip($applications, function ($app, $zip, $dir) {
+            $columns = $this->csvColumns($app);
+            $csv = '';
+            $handle = fopen('php://temp', 'r+');
+            fwrite($handle, chr(0xEF) . chr(0xBB) . chr(0xBF));
+            fputcsv($handle, array_keys($columns), ';');
+            fputcsv($handle, array_values($columns), ';');
+            rewind($handle);
+            $csv = stream_get_contents($handle);
+            fclose($handle);
+            $name = $app->evidence_number ?: $app->application_number ?: $app->id;
+            $zip->addFromString("{$dir}/{$name}.csv", $csv);
+        }, 'csv');
+    }
+
+    public function bulkExportPdf(Request $request): Response
+    {
+        $ids = $this->validateBulkIds($request);
+        $applications = Application::with(['user', 'studyProgram', 'round'])->whereIn('id', $ids)->get();
+
+        return $this->bulkZip($applications, function ($app, $zip, $dir) {
+            $pdf = Pdf::loadView('admin.applications.pdf', ['application' => $app])->setPaper('a4');
+            $name = $app->evidence_number ?: $app->application_number ?: $app->id;
+            $zip->addFromString("{$dir}/{$name}.pdf", $pdf->output());
+        }, 'pdf');
+    }
+
+    public function bulkExportZip(Request $request): Response
+    {
+        $ids = $this->validateBulkIds($request);
+        $applications = Application::with(['user', 'studyProgram', 'round', 'attachments'])->whereIn('id', $ids)->get();
+
+        $includeCsv = $request->boolean('csv');
+        $includePdf = $request->boolean('pdf');
+        $includeEducation = $request->boolean('education');
+        $includePayment = $request->boolean('payment');
+        $includeOther = $request->boolean('other');
+
+        return $this->bulkZip($applications, function ($app, $zip, $dir) use ($includeCsv, $includePdf, $includeEducation, $includePayment, $includeOther) {
+            $name = $app->evidence_number ?: $app->application_number ?: $app->id;
+
+            if ($includeCsv) {
+                $columns = $this->csvColumns($app);
+                $csv = '';
+                $handle = fopen('php://temp', 'r+');
+                fwrite($handle, chr(0xEF) . chr(0xBB) . chr(0xBF));
+                fputcsv($handle, array_keys($columns), ';');
+                fputcsv($handle, array_values($columns), ';');
+                rewind($handle);
+                $csv = stream_get_contents($handle);
+                fclose($handle);
+                $zip->addFromString("{$dir}/{$name}.csv", $csv);
+            }
+
+            if ($includePdf) {
+                $pdf = Pdf::loadView('admin.applications.pdf', ['application' => $app])->setPaper('a4');
+                $zip->addFromString("{$dir}/{$name}.pdf", $pdf->output());
+            }
+
+            if ($includeEducation) {
+                foreach ($app->attachments->whereIn('type', ['maturita', 'half_year_report']) as $att) {
+                    $diskPath = Storage::disk('public')->path($att->disk_path);
+                    if (file_exists($diskPath)) {
+                        $zip->addFile($diskPath, "{$dir}/doklady-vzdelani/{$att->filename}");
+                    }
+                }
+            }
+
+            if ($includePayment) {
+                foreach ($app->attachments->where('type', 'payment') as $att) {
+                    $diskPath = Storage::disk('public')->path($att->disk_path);
+                    if (file_exists($diskPath)) {
+                        $zip->addFile($diskPath, "{$dir}/platba/{$att->filename}");
+                    }
+                }
+            }
+
+            if ($includeOther) {
+                foreach ($app->attachments->where('type', 'other') as $att) {
+                    $diskPath = Storage::disk('public')->path($att->disk_path);
+                    if (file_exists($diskPath)) {
+                        $zip->addFile($diskPath, "{$dir}/prilohy/{$att->filename}");
+                    }
+                }
+            }
+        }, 'export');
+    }
+
+    private function validateBulkIds(Request $request): array
+    {
+        $ids = $request->input('ids', []);
+        if (! is_array($ids) || empty($ids)) {
+            abort(422, 'Nebyly vybrány žádné přihlášky.');
+        }
+        return array_map('intval', $ids);
+    }
+
+    private function bulkZip($applications, callable $addFiles, string $suffix): Response
+    {
+        $zipPath = storage_path('app/temp/' . uniqid('bulk_', true) . '.zip');
+        $dir = dirname($zipPath);
+        if (! is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
+
+        $zip = new \ZipArchive();
+        if ($zip->open($zipPath, \ZipArchive::CREATE) !== true) {
+            abort(500, 'Nelze vytvořit ZIP archiv.');
+        }
+
+        foreach ($applications as $app) {
+            $name = $app->evidence_number ?: $app->application_number ?: $app->id;
+            $addFiles($app, $zip, $name);
+        }
+
+        $zip->close();
+
+        $count = $applications->count();
+        return response()->download($zipPath, "export-{$count}-prihlasek-{$suffix}.zip")->deleteFileAfterSend();
     }
 
     public function acceptPayment($id)

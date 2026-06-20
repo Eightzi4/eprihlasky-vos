@@ -90,12 +90,16 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         Route::get('/',              [AdminController::class, 'dashboard'])->name('dashboard');
         Route::get('/applications',  [AdminController::class, 'applications'])->name('applications');
+        Route::post('/applications/bulk/export/csv', [AdminController::class, 'bulkExportCsv'])->name('applications.bulk.export.csv');
+        Route::post('/applications/bulk/export/pdf', [AdminController::class, 'bulkExportPdf'])->name('applications.bulk.export.pdf');
+        Route::post('/applications/bulk/export/zip', [AdminController::class, 'bulkExportZip'])->name('applications.bulk.export.zip');
         Route::get('/applications/{id}', [AdminController::class, 'showApplication'])->name('applications.show');
         Route::get('/applications/{id}/attachments/{attachmentId}', [AdminController::class, 'downloadAttachment'])->name('applications.attachments.download');
         Route::patch('/applications/{id}/evidence-number', [AdminController::class, 'updateEvidenceNumber'])->name('applications.evidence-number');
         Route::patch('/applications/{id}/move-to-round', [AdminController::class, 'moveToFurtherRound'])->name('applications.move-to-round');
         Route::get('/applications/{id}/export/csv', [AdminController::class, 'exportApplicationCsv'])->name('applications.export.csv');
         Route::get('/applications/{id}/export/pdf', [AdminController::class, 'exportApplicationPdf'])->name('applications.export.pdf');
+        Route::post('/applications/{id}/export/zip', [AdminController::class, 'exportApplicationZip'])->name('applications.export.zip');
 
         Route::patch('/applications/{id}/accept-payment',   [AdminController::class, 'acceptPayment'])->name('applications.acceptPayment');
         Route::patch('/applications/{id}/revert-payment',   [AdminController::class, 'revertPayment'])->name('applications.revertPayment');
