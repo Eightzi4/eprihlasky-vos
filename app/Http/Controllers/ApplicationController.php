@@ -225,7 +225,7 @@ class ApplicationController extends Controller
 
             if (! $this->birthNumberMatchesBirthDate($birthNumber, $birthDate)) {
                 return response()->json([
-                    'error' => 'Rodne cislo neodpovida zadanemu datu narozeni.',
+                    'error' => 'Rodné číslo neodpovídá zadanému datu narození.',
                 ], 422);
             }
         }
@@ -274,6 +274,12 @@ class ApplicationController extends Controller
             if ($old) {
                 Storage::disk('public')->delete($old->disk_path);
                 $old->delete();
+            }
+
+            if (in_array($type, ['maturita', 'half_year_report'], true)) {
+                $application->update(['education_admin_message' => null]);
+            } elseif ($type === 'payment') {
+                $application->update(['payment_admin_message' => null]);
             }
         }
 
@@ -433,7 +439,7 @@ class ApplicationController extends Controller
 
         if (! $this->birthNumberMatchesBirthDate($application->birth_number, $application->birth_date)) {
             return redirect()->route('application.step1', $id)
-                ->with('error', 'Rodne cislo musi odpovidat zadanemu datu narozeni.');
+                ->with('error', 'Rodné číslo musí odpovídat zadanému datu narození.');
         }
 
         $submittedAt = now();

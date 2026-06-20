@@ -17,7 +17,7 @@
             $displayAccount = $prefix ? "{$prefix}-{$account}/{$bank}" : "{$account}/{$bank}";
         }
 
-        $vs = $variableSymbol;
+        $vs = preg_replace('/\D/', '', (string) $variableSymbol);
         $amount = (int) $settings->application_fee;
         $spd = 'SPD*1.0*ACC:' . $iban . '*AM:' . $amount . '*CC:CZK*X-VS:' . $vs;
         $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=' . urlencode($spd);
@@ -25,11 +25,15 @@
 
     <div x-data="{
         accepted: {{ $application->payment_accepted ? 'true' : 'false' }},
-        pending: {{ $application->paid && !$application->payment_accepted ? 'true' : 'false' }}
+        pending: {{ $application->paid && !$application->payment_accepted ? 'true' : 'false' }},
+        hasMessage: {{ $application->payment_admin_message && !$application->payment_accepted ? 'true' : 'false' }}
     }" x-init="window.addEventListener('status-updated', e => {
         accepted = (e.detail.ps === 'complete');
         pending = (e.detail.ps === 'pending');
-    })">
+    });
+    window.addEventListener('file-uploaded', () => {
+        hasMessage = false;
+    });">
 
         <div x-data="stepValidator({
             step: 4,
@@ -48,7 +52,17 @@
                 </div>
             </div>
 
-            <div x-show="pending && !accepted" x-transition
+            <div x-show="hasMessage" x-transition
+                class="bg-amber-50 border border-amber-200 rounded-3xl p-5 flex items-start gap-4 mb-6">
+                <span class="material-symbols-rounded text-amber-500 text-[28px] flex-shrink-0">rate_review</span>
+                <div>
+                    <p class="font-bold text-amber-900 text-sm">Škola požaduje úpravu</p>
+                    <p class="text-sm text-amber-800 mt-1 leading-relaxed">{{ $application->payment_admin_message }}</p>
+                    <p class="text-xs text-amber-600 mt-2">Po úpravě prosím nahrajte doklad znovu.</p>
+                </div>
+            </div>
+
+            <div x-show="pending && !accepted && !hasMessage" x-transition
                 class="bg-blue-50 border border-blue-200 rounded-3xl p-5 flex items-center gap-4 mb-6">
                 <span class="material-symbols-rounded text-blue-400 text-[28px] flex-shrink-0">hourglass_top</span>
                 <div>

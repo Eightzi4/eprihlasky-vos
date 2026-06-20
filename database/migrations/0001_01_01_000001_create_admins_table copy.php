@@ -15,6 +15,9 @@ return new class extends Migration
             $table->string('password')->nullable();
             $table->boolean('is_main_admin')->default(false);
             $table->rememberToken();
+            $table->text('two_factor_secret')->nullable();
+            $table->timestamp('two_factor_confirmed_at')->nullable();
+            $table->text('two_factor_recovery_codes')->nullable();
             $table->timestamps();
         });
 

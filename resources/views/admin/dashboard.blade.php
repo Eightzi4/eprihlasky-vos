@@ -5,15 +5,36 @@
 @section('content')
     @php $admin = Auth::guard('admin')->user(); @endphp
 
+    @if ($admin->isMainAdmin())
+        <div class="flex items-center justify-end mb-2">
+            <x-button as="button" onclick="openModal('presets-modal')"
+                text="Spravovat panely" icon="tune"
+                variant="ghost" size="sm" spanClass="text-gray-500" />
+        </div>
+    @endif
+
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        @foreach ([['label' => 'Celkem přihlášek', 'value' => $stats['total'], 'icon' => 'description', 'cls' => 'text-gray-500'], ['label' => 'Odesláno', 'value' => $stats['submitted'], 'icon' => 'check_circle', 'cls' => 'text-green-500'], ['label' => 'Rozpracováno', 'value' => $stats['drafts'], 'icon' => 'edit_note', 'cls' => 'text-amber-500'], ['label' => 'Čeká na platbu', 'value' => $stats['awaiting_payment'], 'icon' => 'payments', 'cls' => 'text-blue-500']] as $stat)
-            <div class="bg-white/80 backdrop-blur-xl rounded-2xl shadow-sm border border-white/60 ring-1 ring-black/5 p-5">
+        @foreach ($presets as $preset)
+            @php
+                $params = [
+                    'cp' => $preset['checkpoint'] ?? '',
+                    'st' => $preset['state'] ?? '',
+                ];
+                if ($preset['study_program_id']) {
+                    $params['program'] = $preset['study_program_id'];
+                }
+                if ($preset['round_id']) {
+                    $params['round'] = $preset['round_id'];
+                }
+            @endphp
+            <a href="{{ route('admin.applications', $params) }}"
+                class="block bg-white/80 backdrop-blur-xl rounded-2xl shadow-sm border border-white/60 ring-1 ring-black/5 p-5 hover:shadow-md hover:ring-school-primary/20 hover:border-school-primary/20 transition-all duration-200 group">
                 <div class="flex items-center justify-between mb-3">
-                    <p class="text-xs font-bold text-gray-400 uppercase tracking-wide">{{ $stat['label'] }}</p>
-                    <span class="material-symbols-rounded {{ $stat['cls'] }} text-[22px]">{{ $stat['icon'] }}</span>
+                    <p class="text-xs font-bold text-gray-400 uppercase tracking-wide group-hover:text-gray-500 transition-colors">{{ $preset['label'] }}</p>
+                    <span class="material-symbols-rounded {{ $preset['color_class'] }} text-[22px]">{{ $preset['icon'] }}</span>
                 </div>
-                <p class="text-3xl font-bold text-gray-900">{{ $stat['value'] }}</p>
-            </div>
+                <p class="text-3xl font-bold text-gray-900">{{ $preset['count'] }}</p>
+            </a>
         @endforeach
     </div>
 
@@ -374,6 +395,266 @@
             </div>
         </div>
     </div>
+
+    @if ($admin->isMainAdmin())
+        <div id="presets-modal" class="fixed inset-0 z-50 hidden">
+            <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm" onclick="closeModal('presets-modal')"></div>
+            <div class="relative min-h-screen flex items-center justify-center p-4">
+                <div class="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl w-full max-w-2xl p-8 relative border border-white/60 ring-1 ring-black/5 max-h-[90vh] overflow-y-auto">
+                    <button type="button" onclick="closeModal('presets-modal')"
+                        class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
+                        <span class="material-symbols-rounded text-[24px]">close</span>
+                    </button>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6">Spravovat panely</h2>
+
+                    <div class="space-y-2 mb-8" id="presets-list">
+                        <p class="text-xs font-bold text-gray-400 uppercase tracking-wide">Existující panely <span class="text-gray-300 font-normal">— přetáhněte pro změnu pořadí</span></p>
+                        @foreach ($presets as $preset)
+                            <div class="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 preset-item cursor-grab active:cursor-grabbing transition-shadow hover:shadow-sm"
+                                draggable="true"
+                                data-preset-id="{{ $preset['id'] }}"
+                                ondragstart="handleDragStart(event)"
+                                ondragend="handleDragEnd(event)"
+                                ondragover="handleDragOver(event)"
+                                ondrop="handleDrop(event)">
+                                <span class="material-symbols-rounded text-gray-300 text-[20px] flex-shrink-0 cursor-grab drag-handle">drag_indicator</span>
+                                <span class="material-symbols-rounded {{ $preset['color_class'] }} text-[20px] flex-shrink-0">{{ $preset['icon'] }}</span>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-bold text-gray-800 truncate">{{ $preset['label'] }}</p>
+                                    <p class="text-xs text-gray-400 truncate">
+                                        @if ($preset['checkpoint'])
+                                            {{ $preset['checkpoint'] }} &rarr; {{ $preset['state'] }}
+                                        @else
+                                            bez filtru
+                                        @endif
+                                    </p>
+                                </div>
+                                <span class="text-xs font-bold text-gray-400 w-10 text-right">{{ $preset['count'] }}</span>
+                                <div class="flex items-center gap-1 flex-shrink-0">
+                                    <button onclick="editPreset({{ $preset['id'] }}, {{ Js::from($preset) }})"
+                                        class="p-1.5 text-gray-400 hover:text-school-primary hover:bg-red-50 rounded-lg transition-colors"
+                                        title="Upravit">
+                                        <span class="material-symbols-rounded text-[16px]">edit</span>
+                                    </button>
+                                    <form action="{{ route('admin.dashboard-presets.destroy', $preset['id']) }}" method="POST"
+                                        onsubmit="return confirm('Opravdu odstranit panel \u201e{{ $preset['label'] }}\u201c?')" class="inline">
+                                        @csrf @method('DELETE')
+                                        <button type="submit"
+                                            class="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                            title="Odstranit">
+                                            <span class="material-symbols-rounded text-[16px]">delete</span>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+
+                    <div class="border-t border-gray-200 pt-6">
+                        <p class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-4" id="preset-form-title">Přidat panel</p>
+                        <form id="preset-form" action="{{ route('admin.dashboard-presets.store') }}" method="POST" class="space-y-4">
+                            @csrf
+                            <input type="hidden" name="_method" id="preset-method" value="POST">
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Popisek</label>
+                                    <input type="text" name="label" id="preset-label" required
+                                        placeholder="např. Čeká na schválení platby"
+                                        class="w-full rounded-xl border border-gray-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-school-primary focus:border-school-primary bg-white/50 px-3 py-2 text-sm placeholder-gray-400">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Ikona <span class="text-gray-400 font-normal">(Material Symbol)</span></label>
+                                    <input type="text" name="icon" id="preset-icon" required
+                                        placeholder="např. payments"
+                                        class="w-full rounded-xl border border-gray-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-school-primary focus:border-school-primary bg-white/50 px-3 py-2 text-sm placeholder-gray-400">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Barva ikony</label>
+                                <div class="flex items-center gap-3 flex-wrap">
+                                    @foreach ([
+                                        'text-gray-500' => 'Šedá',
+                                        'text-green-500' => 'Zelená',
+                                        'text-amber-500' => 'Jantarová',
+                                        'text-blue-500' => 'Modrá',
+                                        'text-school-primary' => 'Červená',
+                                    ] as $cls => $name)
+                                        <label class="flex items-center gap-1.5 cursor-pointer">
+                                            <input type="radio" name="color_class" value="{{ $cls }}"
+                                                id="preset-color-{{ $loop->index }}"
+                                                {{ $cls === 'text-gray-500' ? 'checked' : '' }}>
+                                            <span class="text-xs text-gray-600">{{ $name }}</span>
+                                        </label>
+                                    @endforeach
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Krok (checkpoint)</label>
+                                    <select name="checkpoint" id="preset-checkpoint"
+                                        class="w-full rounded-xl border border-gray-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-school-primary focus:border-school-primary bg-white/50 px-3 py-2 text-sm appearance-none">
+                                        <option value="">Bez filtru (všechny)</option>
+                                        <option value="identity_verified">Ověření identity</option>
+                                        <option value="step1">Osobní údaje</option>
+                                        <option value="gdpr_accepted">Souhlas GDPR</option>
+                                        <option value="submitted">Přihláška odeslána</option>
+                                        <option value="step2">Vzdělání</option>
+                                        <option value="payment">Platba</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Stav</label>
+                                    <select name="state" id="preset-state"
+                                        class="w-full rounded-xl border border-gray-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-school-primary focus:border-school-primary bg-white/50 px-3 py-2 text-sm appearance-none">
+                                        <option value="">Vyberte stav</option>
+                                        <option value="complete">Splněno</option>
+                                        <option value="incomplete">Nesplněno</option>
+                                        <option value="pending">Čeká na schválení</option>
+                                        <option value="failed">Nesplněno po termínu</option>
+                                        <option value="locked">Uzamčeno</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Obor <span class="text-gray-400 font-normal">(volitelné)</span></label>
+                                    <select name="study_program_id" id="preset-program"
+                                        class="w-full rounded-xl border border-gray-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-school-primary focus:border-school-primary bg-white/50 px-3 py-2 text-sm appearance-none">
+                                        <option value="">Všechny obory</option>
+                                        @foreach (\App\Models\StudyProgram::orderBy('name')->get() as $sp)
+                                            <option value="{{ $sp->id }}">{{ $sp->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Kolo <span class="text-gray-400 font-normal">(volitelné)</span></label>
+                                    <select name="round_id" id="preset-round"
+                                        class="w-full rounded-xl border border-gray-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-school-primary focus:border-school-primary bg-white/50 px-3 py-2 text-sm appearance-none">
+                                        <option value="">Všechna kola</option>
+                                        @foreach (\App\Models\ApplicationRound::with('studyProgram')->orderBy('academic_year')->orderBy('label')->get() as $r)
+                                            <option value="{{ $r->id }}">{{ $r->label ?? $r->academic_year }} — {{ $r->studyProgram?->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-3 pt-2">
+                                <x-button as="button" type="submit" text="Přidat panel"
+                                    icon="add" iconAnimation="rotate" id="preset-submit-btn" />
+                                <button type="button" onclick="resetPresetForm()"
+                                    id="preset-cancel-btn"
+                                    class="text-xs font-semibold text-gray-500 hover:text-gray-700 hidden">
+                                    Zrušit úpravu
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            let dragSrcEl = null;
+
+            function handleDragStart(e) {
+                dragSrcEl = e.currentTarget;
+                e.currentTarget.classList.add('opacity-50', 'ring-2', 'ring-school-primary/30');
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', e.currentTarget.dataset.presetId);
+            }
+
+            function handleDragEnd(e) {
+                e.currentTarget.classList.remove('opacity-50', 'ring-2', 'ring-school-primary/30');
+                document.querySelectorAll('.preset-item').forEach(el => {
+                    el.classList.remove('border-school-primary', 'bg-red-50/30');
+                });
+                dragSrcEl = null;
+            }
+
+            function handleDragOver(e) {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                const target = e.currentTarget;
+                if (target !== dragSrcEl) {
+                    target.classList.add('border-school-primary', 'bg-red-50/30');
+                }
+            }
+
+            async function handleDrop(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const target = e.currentTarget;
+                target.classList.remove('border-school-primary', 'bg-red-50/30');
+
+                if (dragSrcEl && dragSrcEl !== target) {
+                    const list = document.getElementById('presets-list');
+                    const items = [...list.querySelectorAll('.preset-item')];
+                    const srcIndex = items.indexOf(dragSrcEl);
+                    const targetIndex = items.indexOf(target);
+
+                    if (srcIndex < targetIndex) {
+                        list.insertBefore(dragSrcEl, target.nextSibling);
+                    } else {
+                        list.insertBefore(dragSrcEl, target);
+                    }
+
+                    const newOrder = [...list.querySelectorAll('.preset-item')].map(el => el.dataset.presetId);
+
+                    const resp = await fetch('{{ route('admin.dashboard-presets.reorder') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json',
+                        },
+                        body: JSON.stringify({ order: newOrder }),
+                    });
+
+                    if (resp.ok) {
+                        window.location.reload();
+                    }
+                }
+            }
+
+            function editPreset(id, preset) {
+                const form = document.getElementById('preset-form');
+                form.action = '{{ route('admin.dashboard-presets.update', ['dashboardPreset' => '__ID__']) }}'.replace('__ID__', id);
+                document.getElementById('preset-method').value = 'PATCH';
+                document.getElementById('preset-label').value = preset.label;
+                document.getElementById('preset-icon').value = preset.icon;
+                document.getElementById('preset-checkpoint').value = preset.checkpoint || '';
+                document.getElementById('preset-state').value = preset.state || '';
+                document.getElementById('preset-program').value = preset.study_program_id || '';
+                document.getElementById('preset-round').value = preset.round_id || '';
+                document.querySelector('input[name="color_class"][value="' + (preset.color_class || 'text-gray-500') + '"]').checked = true;
+                document.getElementById('preset-form-title').textContent = 'Upravit panel';
+                document.getElementById('preset-submit-btn').querySelector('span').textContent = 'Uložit změny';
+                document.getElementById('preset-cancel-btn').classList.remove('hidden');
+                openModal('presets-modal');
+                document.getElementById('preset-form').scrollIntoView({ behavior: 'smooth' });
+            }
+
+            function resetPresetForm() {
+                const form = document.getElementById('preset-form');
+                form.action = '{{ route('admin.dashboard-presets.store') }}';
+                document.getElementById('preset-method').value = 'POST';
+                document.getElementById('preset-label').value = '';
+                document.getElementById('preset-icon').value = '';
+                document.getElementById('preset-checkpoint').value = '';
+                document.getElementById('preset-state').value = '';
+                document.getElementById('preset-program').value = '';
+                document.getElementById('preset-round').value = '';
+                document.querySelector('input[name="color_class"][value="text-gray-500"]').checked = true;
+                document.getElementById('preset-form-title').textContent = 'Přidat panel';
+                document.getElementById('preset-submit-btn').querySelector('span').textContent = 'Přidat panel';
+                document.getElementById('preset-cancel-btn').classList.add('hidden');
+            }
+        </script>
+    @endif
 
     <script>
         function openModal(id) {

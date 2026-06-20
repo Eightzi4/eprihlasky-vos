@@ -13,11 +13,15 @@
     <div x-data="{
         accepted: {{ $application->prev_study_info_accepted ? 'true' : 'false' }},
         pending: {{ $isPending ? 'true' : 'false' }},
+        hasMessage: {{ $application->education_admin_message && !$application->prev_study_info_accepted ? 'true' : 'false' }},
         bringInPerson: {{ old('bring_maturita_in_person', $application->bring_maturita_in_person) ? 'true' : 'false' }}
     }" x-init="window.addEventListener('status-updated', e => {
         accepted = (e.detail.s2 === 'complete');
         pending = (e.detail.s2 === 'pending');
-    })">
+    });
+    window.addEventListener('file-uploaded', () => {
+        hasMessage = false;
+    });">
 
         <div x-data="stepValidator({
             step: 2,
@@ -38,12 +42,22 @@
             ]
         })">
 
-            <div x-show="pending && !accepted" x-transition
+            <div x-show="pending && !accepted && !hasMessage" x-transition
                 class="bg-blue-50 border border-blue-200 rounded-3xl p-5 flex items-center gap-4 mb-6">
                 <span class="material-symbols-rounded text-blue-400 text-[28px] flex-shrink-0">hourglass_top</span>
                 <div>
                     <p class="font-bold text-blue-900 text-sm">Čeká na uznání školou</p>
                     <p class="text-xs text-blue-700 mt-0.5">Vyplněné údaje o vzdělání čekají na ověření a uznání školou.</p>
+                </div>
+            </div>
+
+            <div x-show="hasMessage" x-transition
+                class="bg-amber-50 border border-amber-200 rounded-3xl p-5 flex items-start gap-4 mb-6">
+                <span class="material-symbols-rounded text-amber-500 text-[28px] flex-shrink-0">rate_review</span>
+                <div>
+                    <p class="font-bold text-amber-900 text-sm">Škola požaduje úpravu</p>
+                    <p class="text-sm text-amber-800 mt-1 leading-relaxed">{{ $application->education_admin_message }}</p>
+                    <p class="text-xs text-amber-600 mt-2">Po úpravě prosím nahrajte dokumenty znovu.</p>
                 </div>
             </div>
 

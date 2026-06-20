@@ -107,6 +107,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::delete('/applications/{id}/education-attachment/{attachmentId}', [AdminController::class, 'deleteEducationAttachment'])->name('applications.deleteEducationAttachment');
         Route::patch('/applications/{id}/accept-education', [AdminController::class, 'acceptEducation'])->name('applications.acceptEducation');
         Route::patch('/applications/{id}/revert-education', [AdminController::class, 'revertEducation'])->name('applications.revertEducation');
+        Route::patch('/applications/{id}/education-message', [AdminController::class, 'saveEducationMessage'])->name('applications.educationMessage');
+        Route::patch('/applications/{id}/payment-message', [AdminController::class, 'savePaymentMessage'])->name('applications.paymentMessage');
 
         Route::get('/setup',               [AdminController::class, 'showSetup'])->name('setup');
         Route::post('/setup',              [AdminController::class, 'storeSetup'])->name('setup.store');
@@ -137,6 +139,13 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::patch('/admins/{admin}', [MainAdminController::class, 'updateAdmin'])->name('admins.update');
             Route::delete('/admins/{admin}', [MainAdminController::class, 'destroyAdmin'])->name('admins.destroy');
             Route::delete('/admins/{admin}/two-factor', [MainAdminController::class, 'resetAdminTwoFactor'])->name('admins.reset-two-factor');
+
+            Route::post('/dashboard-presets', [MainAdminController::class, 'storePreset'])->name('dashboard-presets.store');
+            Route::post('/dashboard-presets/reorder', [MainAdminController::class, 'reorderPresets'])->name('dashboard-presets.reorder');
+            Route::patch('/dashboard-presets/{dashboardPreset}', [MainAdminController::class, 'updatePreset'])->name('dashboard-presets.update');
+            Route::delete('/dashboard-presets/{dashboardPreset}', [MainAdminController::class, 'destroyPreset'])->name('dashboard-presets.destroy');
+            Route::patch('/dashboard-presets/{dashboardPreset}/move-up', [MainAdminController::class, 'movePresetUp'])->name('dashboard-presets.move-up');
+            Route::patch('/dashboard-presets/{dashboardPreset}/move-down', [MainAdminController::class, 'movePresetDown'])->name('dashboard-presets.move-down');
         });
     });
 });

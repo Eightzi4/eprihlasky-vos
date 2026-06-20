@@ -13,7 +13,6 @@ return new class extends Migration
             $table->unsignedInteger('application_fee')->default(300);
             $table->string('notification_email');
             $table->string('bank_account');
-            $table->string('variable_symbol', 50);
             $table->unsignedInteger('applicant_notification_delay_minutes')->default(5);
             $table->timestamps();
         });

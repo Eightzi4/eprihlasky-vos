@@ -4,9 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ApplicationRound extends Model
 {
+    use SoftDeletes;
     protected $fillable = [
         'study_program_id',
         'academic_year',
@@ -27,7 +29,7 @@ class ApplicationRound extends Model
 
     public function studyProgram()
     {
-        return $this->belongsTo(StudyProgram::class);
+        return $this->belongsTo(StudyProgram::class)->withTrashed();
     }
 
     public function applications()

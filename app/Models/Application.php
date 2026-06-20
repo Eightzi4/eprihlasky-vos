@@ -54,6 +54,8 @@ class Application extends Model
         'specific_needs',
         'note',
         'verified_fields',
+        'education_admin_message',
+        'payment_admin_message',
     ];
 
     protected $casts = [
@@ -83,7 +85,7 @@ class Application extends Model
 
     public function round()
     {
-        return $this->belongsTo(ApplicationRound::class, 'round_id');
+        return $this->belongsTo(ApplicationRound::class, 'round_id')->withTrashed();
     }
 
     public function applicationStatus()
@@ -93,7 +95,7 @@ class Application extends Model
 
     public function studyProgram()
     {
-        return $this->belongsTo(StudyProgram::class);
+        return $this->belongsTo(StudyProgram::class)->withTrashed();
     }
 
     public function attachments()
@@ -389,7 +391,7 @@ class Application extends Model
         }
 
         if ($this->isStep2Complete()) {
-            return 'pending';
+            return $this->education_admin_message ? 'incomplete' : 'pending';
         }
 
         if ($this->shouldFailSection('step2')) {
@@ -406,7 +408,7 @@ class Application extends Model
         }
 
         if ($this->paid) {
-            return 'pending';
+            return $this->payment_admin_message ? 'incomplete' : 'pending';
         }
 
         if ($this->shouldFailSection('payment')) {

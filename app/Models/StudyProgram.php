@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class StudyProgram extends Model
 {
+    use SoftDeletes;
     public const DEFAULT_INFO_URL = 'https://www.oauh.cz/ekonomicko-pravni-cinnost-68-41-n-03.htm';
     public const DEFAULT_VARIABLE_SYMBOL = '202600';
 

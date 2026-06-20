@@ -359,7 +359,23 @@
 
                 init() {
                     this.restoreState();
+                    this.applyUrlParams();
                     window.addEventListener('beforeunload', () => this.saveState());
+                },
+
+                applyUrlParams() {
+                    const params = new URLSearchParams(window.location.search);
+                    if (!params.has('cp')) return;
+
+                    const cp = params.get('cp');
+                    const st = params.get('st');
+                    if (cp && st) {
+                        this.activeFilters = [{ checkpoint: cp, state: st }];
+                    } else {
+                        this.activeFilters = [];
+                    }
+                    this.selectedProgram = params.get('program') || '';
+                    this.selectedRound = params.get('round') || '';
                 },
 
                 navigateTo(url) {

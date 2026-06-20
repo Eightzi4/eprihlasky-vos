@@ -52,7 +52,7 @@
             </div>
 
             <div class="flex items-center gap-3">
-                @if (config('app.env') !== 'production')
+                @if (false) {{-- config('app.env') !== 'production' --}}
                     <a href="{{ route('nia.mock.login', $application->id) }}"
                         class="group relative flex items-center justify-center px-3 py-1.5 rounded-lg overflow-hidden border border-dashed border-amber-400 bg-amber-50 hover:bg-amber-100 transition-all duration-200 cursor-pointer">
                         <span class="text-amber-700 font-bold text-xs flex items-center gap-1.5">

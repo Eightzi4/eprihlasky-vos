@@ -252,6 +252,50 @@
                         </div>
                     </div>
                 </div>
+                @if (! $application->prev_study_info_accepted && $application->isStep2Complete())
+                    <div class="mt-6 pt-5 border-t border-gray-100">
+                        @if ($application->education_admin_message)
+                            <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4">
+                                <div class="flex items-start justify-between gap-3">
+                                    <div>
+                                        <p class="text-xs font-bold text-amber-700 uppercase tracking-wide mb-1">Zpráva pro uchazeče (odeslána)</p>
+                                        <p class="text-sm text-amber-800">{{ $application->education_admin_message }}</p>
+                                    </div>
+                                    <form method="POST" action="{{ route('admin.applications.educationMessage', $application->id) }}" class="flex-shrink-0">
+                                        @csrf @method('PATCH')
+                                        <input type="hidden" name="message" value="">
+                                        <button type="submit"
+                                            class="text-xs font-semibold text-amber-700 hover:text-red-600 transition-colors">
+                                            Odstranit zprávu
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        @else
+                            <form method="POST" action="{{ route('admin.applications.educationMessage', $application->id) }}" class="space-y-3">
+                                @csrf @method('PATCH')
+                                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide">
+                                    Zpráva pro uchazeče
+                                    <span class="text-gray-400 font-normal">— bude odeslána e-mailem</span>
+                                </label>
+                                <textarea name="message" rows="3"
+                                    placeholder="např. Dokument je rozmazaný, prosím nahrajte jej znovu v lepší kvalitě."
+                                    class="w-full rounded-xl border border-gray-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-school-primary focus:border-school-primary bg-white/50 px-4 py-3 text-sm placeholder-gray-400 resize-none"></textarea>
+                                <x-button as="button" type="submit"
+                                    text="Odeslat zprávu" icon="send"
+                                    variant="secondary" size="sm" spanClass="text-gray-700" />
+                            </form>
+                        @endif
+                    </div>
+                @elseif ($application->education_admin_message)
+                    <div class="mt-6 pt-5 border-t border-gray-100">
+                        <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4">
+                            <p class="text-xs font-bold text-amber-700 uppercase tracking-wide mb-1">Zpráva pro uchazeče (odeslána)</p>
+                            <p class="text-sm text-amber-800">{{ $application->education_admin_message }}</p>
+                        </div>
+                    </div>
+                @endif
+
                 <div class="mt-6 pt-5 border-t border-gray-100 flex items-center justify-end gap-3">
                     @if ($application->prev_study_info_accepted)
                         <div
@@ -333,6 +377,51 @@
                         <span class="material-symbols-rounded text-[18px]">warning</span>Zatím nenahráno
                     </div>
                 @endif
+
+                @if (! $application->payment_accepted && $paymentFile)
+                    <div class="pt-5 border-t border-gray-100 mt-5">
+                        @if ($application->payment_admin_message)
+                            <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4">
+                                <div class="flex items-start justify-between gap-3">
+                                    <div>
+                                        <p class="text-xs font-bold text-amber-700 uppercase tracking-wide mb-1">Zpráva pro uchazeče (odeslána)</p>
+                                        <p class="text-sm text-amber-800">{{ $application->payment_admin_message }}</p>
+                                    </div>
+                                    <form method="POST" action="{{ route('admin.applications.paymentMessage', $application->id) }}" class="flex-shrink-0">
+                                        @csrf @method('PATCH')
+                                        <input type="hidden" name="message" value="">
+                                        <button type="submit"
+                                            class="text-xs font-semibold text-amber-700 hover:text-red-600 transition-colors">
+                                            Odstranit zprávu
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        @else
+                            <form method="POST" action="{{ route('admin.applications.paymentMessage', $application->id) }}" class="space-y-3">
+                                @csrf @method('PATCH')
+                                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide">
+                                    Zpráva pro uchazeče
+                                    <span class="text-gray-400 font-normal">— bude odeslána e-mailem</span>
+                                </label>
+                                <textarea name="message" rows="3"
+                                    placeholder="např. Doklad o platbě je nečitelný, prosím nahrajte jej znovu."
+                                    class="w-full rounded-xl border border-gray-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-school-primary focus:border-school-primary bg-white/50 px-4 py-3 text-sm placeholder-gray-400 resize-none"></textarea>
+                                <x-button as="button" type="submit"
+                                    text="Odeslat zprávu" icon="send"
+                                    variant="secondary" size="sm" spanClass="text-gray-700" />
+                            </form>
+                        @endif
+                    </div>
+                @elseif ($application->payment_admin_message)
+                    <div class="pt-5 border-t border-gray-100 mt-5">
+                        <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4">
+                            <p class="text-xs font-bold text-amber-700 uppercase tracking-wide mb-1">Zpráva pro uchazeče (odeslána)</p>
+                            <p class="text-sm text-amber-800">{{ $application->payment_admin_message }}</p>
+                        </div>
+                    </div>
+                @endif
+
                 <div class="pt-5 border-t border-gray-100 flex items-center justify-end gap-3">
                     @if ($paymentFile)
                         @if ($application->payment_accepted)

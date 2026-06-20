@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Mail\AdminLoginLinkMail;
+use App\Mail\StyledNotificationMail;
 use App\Jobs\SendDelayedApplicationNotification;
 use App\Models\Admin;
 use App\Models\AdminLoginTicket;
@@ -12,6 +13,7 @@ use App\Models\ApplicationAttachment;
 use App\Models\ApplicationRound;
 use App\Models\AuditActionType;
 use App\Models\AuditLog;
+use App\Models\DashboardPreset;
 use App\Models\StudyProgram;
 use App\Models\WebsiteSetting;
 use App\Services\TotpService;
@@ -385,14 +387,23 @@ class AdminController extends Controller
 
     public function dashboard()
     {
-        $stats = [
-            'total'            => Application::count(),
-            'submitted'        => Application::where('submitted', true)->count(),
-            'drafts'           => Application::where('submitted', false)->count(),
-            'awaiting_payment' => Application::where('submitted', true)->where('paid', false)->count(),
-        ];
+        $presets = DashboardPreset::orderBy('sort_order')->get();
 
-        return view('admin.dashboard', compact('stats'));
+        $presetsWithCounts = $presets->map(function (DashboardPreset $preset) {
+            return [
+                'id'          => $preset->id,
+                'label'       => $preset->label,
+                'icon'        => $preset->icon,
+                'color_class' => $preset->color_class,
+                'checkpoint'  => $preset->checkpoint,
+                'state'       => $preset->state,
+                'study_program_id' => $preset->study_program_id,
+                'round_id'    => $preset->round_id,
+                'count'       => $preset->countApplications(),
+            ];
+        });
+
+        return view('admin.dashboard', ['presets' => $presetsWithCounts]);
     }
 
     public function applications()
@@ -731,6 +742,7 @@ class AdminController extends Controller
             'payment_accepted' => true,
             'payment_accepted_at' => $acceptedAt,
             'payment_notified_at' => null,
+            'payment_admin_message' => null,
         ]);
 
         $this->scheduleApplicantNotification($application, 'payment', $acceptedAt);
@@ -747,6 +759,7 @@ class AdminController extends Controller
             'payment_accepted' => false,
             'payment_accepted_at' => null,
             'payment_notified_at' => null,
+            'payment_admin_message' => null,
         ]);
         AuditLogger::log(request(), AuditActionType::EDIT, $application, AuditLog::DESCRIPTION_REVERT_PAYMENT);
         return redirect()->route('admin.applications.show', $id)
@@ -773,6 +786,7 @@ class AdminController extends Controller
             'prev_study_info_accepted' => true,
             'education_accepted_at' => $acceptedAt,
             'education_notified_at' => null,
+            'education_admin_message' => null,
         ]);
 
         $this->scheduleApplicantNotification($application, 'education', $acceptedAt);
@@ -788,10 +802,95 @@ class AdminController extends Controller
             'prev_study_info_accepted' => false,
             'education_accepted_at' => null,
             'education_notified_at' => null,
+            'education_admin_message' => null,
         ]);
         AuditLogger::log(request(), AuditActionType::EDIT, $application, AuditLog::DESCRIPTION_REVERT_EDUCATION);
         return redirect()->route('admin.applications.show', $id)
             ->with('success', 'Uznání vzdělání bylo zrušeno.');
+    }
+
+    public function saveEducationMessage(Request $request, $id)
+    {
+        $application = Application::with('user')->findOrFail($id);
+
+        $validated = $request->validate([
+            'message' => 'nullable|string|max:5000',
+        ]);
+
+        $message = $validated['message'] ?: null;
+
+        $application->update(['education_admin_message' => $message]);
+
+        if ($message) {
+            $this->sendAdminMessageEmail($application, 'education', $message);
+        }
+
+        return redirect()->route('admin.applications.show', $id)
+            ->with('success', $message ? 'Zpráva byla odeslána uchazeči.' : 'Zpráva byla odstraněna.');
+    }
+
+    public function savePaymentMessage(Request $request, $id)
+    {
+        $application = Application::with('user')->findOrFail($id);
+
+        $validated = $request->validate([
+            'message' => 'nullable|string|max:5000',
+        ]);
+
+        $message = $validated['message'] ?: null;
+
+        $application->update(['payment_admin_message' => $message]);
+
+        if ($message) {
+            $this->sendAdminMessageEmail($application, 'payment', $message);
+        }
+
+        return redirect()->route('admin.applications.show', $id)
+            ->with('success', $message ? 'Zpráva byla odeslána uchazeči.' : 'Zpráva byla odstraněna.');
+    }
+
+    private function sendAdminMessageEmail(Application $application, string $type, string $message): void
+    {
+        if (! $application->user?->email) {
+            return;
+        }
+
+        $programName = $application->studyProgram?->name ?? 'VOŠ OAUH';
+
+        if ($type === 'education') {
+            $subject = 'Zpráva ke vzdělání — E-přihláška';
+            $headline = 'Zpráva k doloženému vzdělání';
+            $lines = [
+                'Administrátor Vám zaslal zprávu k dokumentům o předchozím vzdělání u přihlášky na program ' . $programName . ':',
+                '"' . $message . '"',
+                'Po úpravě dokumenty nahrajte znovu ve své přihlášce.',
+            ];
+        } else {
+            $subject = 'Zpráva k platbě — E-přihláška';
+            $headline = 'Zpráva k doložené platbě';
+            $lines = [
+                'Administrátor Vám zaslal zprávu k dokladu o platbě u přihlášky na program ' . $programName . ':',
+                '"' . $message . '"',
+                'Po úpravě doklad nahrajte znovu ve své přihlášce.',
+            ];
+        }
+
+        try {
+            Mail::to($application->user->email)->send(new StyledNotificationMail(
+                subjectLine: $subject,
+                headline: $headline,
+                lines: $lines,
+                buttonLabel: 'Zobrazit přihlášku',
+                buttonUrl: route('dashboard'),
+                metaLine: 'Číslo přihlášky: ' . ($application->application_number ?: $application->evidence_number ?: '#' . $application->id),
+                fallbackUrl: route('dashboard'),
+            ));
+        } catch (\Throwable $e) {
+            Log::error('Admin message email failed: ' . $e->getMessage(), [
+                'application_id' => $application->id,
+                'type' => $type,
+            ]);
+        }
     }
 
     public function uploadEducationAttachment(Request $request, $id)

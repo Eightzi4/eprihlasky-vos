@@ -94,16 +94,16 @@
 
         <x-form-section title="Identifikační údaje">
             <x-form-field name="first_name" label="Křestní jméno" icon="person" :value="old('first_name', $application->first_name)" placeholder="Jan"
-                :verified="in_array('first_name', $vf)" :locked="true" :nia-required="true" />
+                :verified="in_array('first_name', $vf)" :locked="$isLocked" :nia-required="true" />
             <x-form-field name="last_name" label="Příjmení" icon="badge" :value="old('last_name', $application->last_name)" placeholder="Novák"
-                :verified="in_array('last_name', $vf)" :locked="true" :nia-required="true" />
+                :verified="in_array('last_name', $vf)" :locked="$isLocked" :nia-required="true" />
             <x-form-field name="gender" label="Pohlaví" icon="wc" type="select" :span="2" :options="['' => 'Vyberte pohlaví', 'Muž' => 'Muž', 'Žena' => 'Žena']"
                 :value="old('gender', $application->gender)" :locked="$isLocked" />
         </x-form-section>
 
         <x-form-section title="Narození a občanství">
             <x-form-field name="birth_date" label="Datum narození" icon="calendar_today" type="date" :value="old('birth_date', $application->birth_date?->format('Y-m-d') ?? '')"
-                :verified="in_array('birth_date', $vf)" :locked="true" :nia-required="true" />
+                :verified="in_array('birth_date', $vf)" :locked="$isLocked" :nia-required="true" />
             <x-form-field name="birth_number" label="Rodné číslo" icon="fingerprint" :value="old('birth_number', $application->birth_number)"
                 placeholder="000101/1234" :verified="in_array('birth_number', $vf)" :locked="$isLocked" />
             <x-form-field name="citizenship" label="Státní občanství" icon="flag" type="select" :options="[
@@ -126,11 +126,11 @@
             ]" :value="old('country', $application->country)"
                 :locked="$isLocked" />
             <x-form-field name="city" label="Obec / Město" icon="location_city" :value="old('city', $application->city)"
-                placeholder="Uherské Hradiště" :verified="in_array('city', $vf)" :locked="true" :nia-required="true" />
+                placeholder="Uherské Hradiště" :verified="in_array('city', $vf)" :locked="$isLocked" :nia-required="true" />
             <x-form-field name="street" label="Ulice a číslo popisné" icon="home" :value="old('street', $application->street)"
-                placeholder="Masarykovo náměstí 123" :verified="in_array('street', $vf)" :locked="true" :nia-required="true" />
+                placeholder="Masarykovo náměstí 123" :verified="in_array('street', $vf)" :locked="$isLocked" :nia-required="true" />
             <x-form-field name="zip" label="PSČ" icon="markunread_mailbox" :value="old('zip', $application->zip)" placeholder="686 01"
-                :verified="in_array('zip', $vf)" :locked="true" :nia-required="true" />
+                :verified="in_array('zip', $vf)" :locked="$isLocked" :nia-required="true" />
         </x-form-section>
 
         <x-form-section title="Kontaktní údaje">

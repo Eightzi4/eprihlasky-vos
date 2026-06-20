@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Admin;
 use App\Models\ApplicationRound;
+use App\Models\DashboardPreset;
 use App\Models\StudyProgram;
 use App\Models\AuditActionType;
 use App\Models\AuditLog;
@@ -106,11 +107,6 @@ class MainAdminController extends Controller
 
     public function destroyProgram(StudyProgram $studyProgram): RedirectResponse
     {
-        if ($studyProgram->applications()->exists()) {
-            return redirect()->route('admin.rounds')
-                ->with('error', 'Program nelze odstranit, protože už obsahuje přihlášky.');
-        }
-
         $studyProgram->delete();
 
         return redirect()->route('admin.rounds')->with('success', 'Studijní program byl odstraněn.');
@@ -245,6 +241,102 @@ class MainAdminController extends Controller
         $admin->save();
 
         return redirect()->route('admin.admins')->with('success', 'Dvoufázové ověření administrátora ' . e($admin->name) . ' bylo resetováno. Administrátor si při příštím přihlášení nastaví nové heslo a 2FA.');
+    }
+
+    public function storePreset(Request $request): RedirectResponse
+    {
+        $validated = $request->validate($this->presetRules(), [], $this->presetAttributes());
+
+        $validated['sort_order'] = DashboardPreset::max('sort_order') + 1;
+        DashboardPreset::create($validated);
+
+        return redirect()->route('admin.dashboard')->with('success', 'Panel byl vytvořen.');
+    }
+
+    public function updatePreset(Request $request, DashboardPreset $dashboardPreset): RedirectResponse
+    {
+        $validated = $request->validate($this->presetRules(), [], $this->presetAttributes());
+
+        $dashboardPreset->update($validated);
+
+        return redirect()->route('admin.dashboard')->with('success', 'Panel byl upraven.');
+    }
+
+    public function destroyPreset(DashboardPreset $dashboardPreset): RedirectResponse
+    {
+        $dashboardPreset->delete();
+
+        return redirect()->route('admin.dashboard')->with('success', 'Panel byl odstraněn.');
+    }
+
+    public function reorderPresets(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'order' => ['required', 'array'],
+            'order.*' => ['required', 'integer', 'exists:dashboard_presets,id'],
+        ]);
+
+        foreach ($request->input('order') as $i => $id) {
+            DashboardPreset::where('id', $id)->update(['sort_order' => $i]);
+        }
+
+        return redirect()->route('admin.dashboard')->with('success', 'Pořadí panelů bylo změněno.');
+    }
+
+    public function movePresetUp(DashboardPreset $dashboardPreset): RedirectResponse
+    {
+        $current = $dashboardPreset->sort_order;
+        $above = DashboardPreset::where('sort_order', '<', $current)
+            ->orderByDesc('sort_order')
+            ->first();
+
+        if ($above) {
+            $dashboardPreset->update(['sort_order' => $above->sort_order]);
+            $above->update(['sort_order' => $current]);
+        }
+
+        return redirect()->route('admin.dashboard')->with('success', 'Pořadí panelů bylo změněno.');
+    }
+
+    public function movePresetDown(DashboardPreset $dashboardPreset): RedirectResponse
+    {
+        $current = $dashboardPreset->sort_order;
+        $below = DashboardPreset::where('sort_order', '>', $current)
+            ->orderBy('sort_order')
+            ->first();
+
+        if ($below) {
+            $dashboardPreset->update(['sort_order' => $below->sort_order]);
+            $below->update(['sort_order' => $current]);
+        }
+
+        return redirect()->route('admin.dashboard')->with('success', 'Pořadí panelů bylo změněno.');
+    }
+
+    private function presetRules(): array
+    {
+        return [
+            'label' => ['required', 'string', 'max:255'],
+            'icon' => ['required', 'string', 'max:255'],
+            'color_class' => ['required', 'string', 'max:255'],
+            'checkpoint' => ['nullable', 'string', 'max:255'],
+            'state' => ['nullable', 'string', 'max:255', 'required_with:checkpoint'],
+            'study_program_id' => ['nullable', 'integer', 'exists:study_programs,id'],
+            'round_id' => ['nullable', 'integer', 'exists:application_rounds,id'],
+        ];
+    }
+
+    private function presetAttributes(): array
+    {
+        return [
+            'label' => 'popisek',
+            'icon' => 'ikona',
+            'color_class' => 'barva',
+            'checkpoint' => 'krok',
+            'state' => 'stav',
+            'study_program_id' => 'studijní program',
+            'round_id' => 'přijímací kolo',
+        ];
     }
 
     private function ensureNotSelf(Admin $admin): void

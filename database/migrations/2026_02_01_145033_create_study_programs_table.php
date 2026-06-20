@@ -18,11 +18,13 @@ return new class extends Migration
             $table->string('language')->default('Čeština');
             $table->string('location')->default('Uherské Hradiště');
             $table->string('tuition_fee')->nullable();
+            $table->string('variable_symbol', 50)->nullable();
             $table->text('description')->nullable();
             $table->string('image_path')->nullable();
             $table->string('info_url', 2048)->default('https://www.oauh.cz/ekonomicko-pravni-cinnost-68-41-n-03.htm');
             $table->boolean('is_active')->default(true);
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

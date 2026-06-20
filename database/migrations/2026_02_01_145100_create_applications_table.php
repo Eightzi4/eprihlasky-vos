@@ -26,9 +26,11 @@ return new class extends Migration
             $table->boolean('prev_study_info_accepted')->default(false);
             $table->timestamp('education_accepted_at')->nullable();
             $table->timestamp('education_notified_at')->nullable();
+            $table->text('education_admin_message')->nullable();
             $table->boolean('payment_accepted')->default(false);
             $table->timestamp('payment_accepted_at')->nullable();
             $table->timestamp('payment_notified_at')->nullable();
+            $table->text('payment_admin_message')->nullable();
 
             $table->string('application_number')->nullable();
             $table->string('evidence_number')->nullable()->unique();

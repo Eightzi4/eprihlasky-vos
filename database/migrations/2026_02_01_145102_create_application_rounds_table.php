@@ -19,6 +19,7 @@ return new class extends Migration
             $table->unsignedInteger('max_applicants')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
+            $table->softDeletes();
 
             $table->index(['study_program_id', 'academic_year']);
         });

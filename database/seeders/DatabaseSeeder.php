@@ -69,5 +69,6 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $this->call(ApplicationsSeeder::class);
+        $this->call(DashboardPresetsSeeder::class);
     }
 }
