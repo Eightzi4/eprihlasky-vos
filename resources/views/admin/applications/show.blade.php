@@ -336,11 +336,11 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-5">
                     <div>
                         <p class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">Specifické potřeby</p>
-                        <p class="text-sm text-gray-900 leading-relaxed">{{ $application->specific_needs ?: '—' }}</p>
+                        <p class="text-sm text-gray-900 leading-relaxed break-words whitespace-pre-wrap">{{ $application->specific_needs ?: '—' }}</p>
                     </div>
                     <div>
                         <p class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">Poznámka</p>
-                        <p class="text-sm text-gray-900 leading-relaxed">{{ $application->note ?: '—' }}</p>
+                        <p class="text-sm text-gray-900 leading-relaxed break-words whitespace-pre-wrap">{{ $application->note ?: '—' }}</p>
                     </div>
                 </div>
             </div>

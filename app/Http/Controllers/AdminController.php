@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Barryvdh\DomPDF\Facade\Pdf;
 use App\Mail\AdminLoginLinkMail;
 use App\Mail\StyledNotificationMail;
 use App\Jobs\SendDelayedApplicationNotification;
@@ -522,15 +521,34 @@ class AdminController extends Controller
         ]);
     }
 
-    public function exportApplicationPdf($id): Response
+    public function exportApplicationPdf($id)
     {
         $application = $this->loadApplicationForExport($id);
-        AuditLogger::log(request(), AuditActionType::EXPORT, $application, AuditLog::DESCRIPTION_EXPORT_APPLICATION_PDF);
-        $pdf = Pdf::loadView('admin.applications.pdf', [
-            'application' => $application,
-        ])->setPaper('a4');
 
-        return $pdf->download('prihlaska-' . ($application->evidence_number ?: $application->application_number ?: $application->id) . '.pdf');
+        AuditLogger::log(
+            request(),
+            AuditActionType::EXPORT,
+            $application,
+            AuditLog::DESCRIPTION_EXPORT_APPLICATION_PDF
+        );
+
+        $maturitaFile = $application->attachments->where('type', 'maturita')->first();
+        $halfYearFile = $application->attachments->where('type', 'half_year_report')->first();
+        $paymentFile  = $application->attachments->where('type', 'payment')->first();
+        $otherFiles   = $application->attachments->where('type', 'other');
+
+        $filename = 'prihlaska-' . ($application->evidence_number ?: $application->application_number ?: $application->id) . '.pdf';
+        $pdfContent = $this->renderPdf('admin.applications.pdf', [
+            'application'  => $application,
+            'maturitaFile' => $maturitaFile,
+            'halfYearFile' => $halfYearFile,
+            'paymentFile'  => $paymentFile,
+            'otherFiles'   => $otherFiles,
+        ]);
+
+        return response($pdfContent)
+            ->header('Content-Type', 'application/pdf')
+            ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
     }
 
     public function exportApplicationZip(Request $request, $id): Response
@@ -538,7 +556,7 @@ class AdminController extends Controller
         $application = $this->loadApplicationForExport($id);
         $baseName = $application->evidence_number ?: $application->application_number ?: $application->id;
 
-        AuditLogger::log($request, AuditActionType::EXPORT, $application, AuditLog::DESCRIPTION_EXPORT_APPLICATION_CSV);
+        AuditLogger::log($request, AuditActionType::EXPORT, $application, AuditLog::DESCRIPTION_EXPORT_APPLICATION_ZIP);
 
         $zipPath = storage_path('app/temp/' . uniqid('export_', true) . '.zip');
         $dir = dirname($zipPath);
@@ -565,8 +583,20 @@ class AdminController extends Controller
         }
 
         if ($request->boolean('pdf')) {
-            $pdf = Pdf::loadView('admin.applications.pdf', ['application' => $application])->setPaper('a4');
-            $zip->addFromString("{$baseName}.pdf", $pdf->output());
+            $maturitaFile = $application->attachments->where('type', 'maturita')->first();
+            $halfYearFile = $application->attachments->where('type', 'half_year_report')->first();
+            $paymentFile  = $application->attachments->where('type', 'payment')->first();
+            $otherFiles   = $application->attachments->where('type', 'other');
+
+            $pdfContent = $this->renderPdf('admin.applications.pdf', [
+                'application'  => $application,
+                'maturitaFile' => $maturitaFile,
+                'halfYearFile' => $halfYearFile,
+                'paymentFile'  => $paymentFile,
+                'otherFiles'   => $otherFiles,
+            ]);
+
+            $zip->addFromString("{$baseName}.pdf", $pdfContent);
         }
 
         if ($request->boolean('education')) {
@@ -607,6 +637,7 @@ class AdminController extends Controller
         $applications = Application::with(['user', 'studyProgram', 'round'])->whereIn('id', $ids)->get();
 
         return $this->bulkZip($applications, function ($app, $zip, $dir) {
+            AuditLogger::log(request(), AuditActionType::EXPORT, $app, AuditLog::DESCRIPTION_BULK_EXPORT_CSV);
             $columns = $this->csvColumns($app);
             $csv = '';
             $handle = fopen('php://temp', 'r+');
@@ -627,9 +658,23 @@ class AdminController extends Controller
         $applications = Application::with(['user', 'studyProgram', 'round'])->whereIn('id', $ids)->get();
 
         return $this->bulkZip($applications, function ($app, $zip, $dir) {
-            $pdf = Pdf::loadView('admin.applications.pdf', ['application' => $app])->setPaper('a4');
+            AuditLogger::log(request(), AuditActionType::EXPORT, $app, AuditLog::DESCRIPTION_BULK_EXPORT_PDF);
+
+            $maturitaFile = $app->attachments->where('type', 'maturita')->first();
+            $halfYearFile = $app->attachments->where('type', 'half_year_report')->first();
+            $paymentFile  = $app->attachments->where('type', 'payment')->first();
+            $otherFiles   = $app->attachments->where('type', 'other');
+
+            $pdfContent = $this->renderPdf('admin.applications.pdf', [
+                'application'  => $app,
+                'maturitaFile' => $maturitaFile,
+                'halfYearFile' => $halfYearFile,
+                'paymentFile'  => $paymentFile,
+                'otherFiles'   => $otherFiles,
+            ]);
+
             $name = $app->evidence_number ?: $app->application_number ?: $app->id;
-            $zip->addFromString("{$dir}/{$name}.pdf", $pdf->output());
+            $zip->addFromString("{$dir}/{$name}.pdf", $pdfContent);
         }, 'pdf');
     }
 
@@ -645,6 +690,8 @@ class AdminController extends Controller
         $includeOther = $request->boolean('other');
 
         return $this->bulkZip($applications, function ($app, $zip, $dir) use ($includeCsv, $includePdf, $includeEducation, $includePayment, $includeOther) {
+            AuditLogger::log(request(), AuditActionType::EXPORT, $app, AuditLog::DESCRIPTION_BULK_EXPORT_ZIP);
+
             $name = $app->evidence_number ?: $app->application_number ?: $app->id;
 
             if ($includeCsv) {
@@ -661,8 +708,20 @@ class AdminController extends Controller
             }
 
             if ($includePdf) {
-                $pdf = Pdf::loadView('admin.applications.pdf', ['application' => $app])->setPaper('a4');
-                $zip->addFromString("{$dir}/{$name}.pdf", $pdf->output());
+                $maturitaFile = $app->attachments->where('type', 'maturita')->first();
+                $halfYearFile = $app->attachments->where('type', 'half_year_report')->first();
+                $paymentFile  = $app->attachments->where('type', 'payment')->first();
+                $otherFiles   = $app->attachments->where('type', 'other');
+
+                $pdfContent = $this->renderPdf('admin.applications.pdf', [
+                    'application'  => $app,
+                    'maturitaFile' => $maturitaFile,
+                    'halfYearFile' => $halfYearFile,
+                    'paymentFile'  => $paymentFile,
+                    'otherFiles'   => $otherFiles,
+                ]);
+
+                $zip->addFromString("{$dir}/{$name}.pdf", $pdfContent);
             }
 
             if ($includeEducation) {
@@ -1063,5 +1122,54 @@ class AdminController extends Controller
             'EV_CISLO' => $application->evidence_number ?: $application->application_number ?: (string) $application->id,
             'E_MAIL' => $application->email ?: '',
         ];
+    }
+
+    private function renderPdf(string $view, array $data): string
+    {
+        $cssContent = '';
+        $manifestPath = public_path('build/manifest.json');
+        if (file_exists($manifestPath)) {
+            $manifest = json_decode(file_get_contents($manifestPath), true);
+            $cssFile = $manifest['resources/css/app.css']['css'][0] ?? null;
+            if ($cssFile && file_exists(public_path('build/' . $cssFile))) {
+                $cssContent = file_get_contents(public_path('build/' . $cssFile));
+            }
+        }
+        if (empty($cssContent)) {
+            $cssFiles = glob(public_path('build/assets/app-*.css'));
+            if (empty($cssFiles)) {
+                $cssFiles = glob(public_path('build/assets/*.css'));
+            }
+            if (! empty($cssFiles)) {
+                $cssContent = file_get_contents($cssFiles[0]);
+            }
+        }
+
+        $logoPath = public_path('storage/logo.png');
+        $logoUri = '';
+        if (file_exists($logoPath)) {
+            $logoUri = 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath));
+        }
+
+        $data['_css'] = $cssContent;
+        $data['_logo'] = $logoUri;
+
+        $html = view($view, $data)->render();
+
+        $html = preg_replace('/<htmlpagefooter[^>]*>.*?<\/htmlpagefooter>/is', '', $html);
+        $html = str_replace('footer: html_pageFooter;', '', $html);
+
+        $snappy = app('snappy.pdf.wrapper');
+        $snappy->setOption('page-size', 'A4');
+        $snappy->setOption('margin-top', 0);
+        $snappy->setOption('margin-bottom', 0);
+        $snappy->setOption('margin-left', 0);
+        $snappy->setOption('margin-right', 0);
+        $snappy->setOption('enable-local-file-access', true);
+        $snappy->setOption('disable-smart-shrinking', true);
+        $snappy->setOption('encoding', 'UTF-8');
+
+        $snappy->loadHTML($html);
+        return $snappy->output();
     }
 }

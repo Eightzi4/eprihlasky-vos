@@ -13,6 +13,11 @@ class AuditLog extends Model
     public const DESCRIPTION_UPDATE_EVIDENCE_NUMBER = 'update_evidence_number';
     public const DESCRIPTION_EXPORT_APPLICATION_CSV = 'export_application_csv';
     public const DESCRIPTION_EXPORT_APPLICATION_PDF = 'export_application_pdf';
+    public const DESCRIPTION_EXPORT_APPLICATION_ZIP = 'export_application_zip';
+    public const DESCRIPTION_BULK_EXPORT_CSV = 'bulk_export_csv';
+    public const DESCRIPTION_BULK_EXPORT_PDF = 'bulk_export_pdf';
+    public const DESCRIPTION_BULK_EXPORT_ZIP = 'bulk_export_zip';
+    public const DESCRIPTION_EXPORT_AUDIT_LOG = 'export_audit_log';
     public const DESCRIPTION_DOWNLOAD_ATTACHMENT = 'download_attachment';
     public const DESCRIPTION_UPLOAD_ATTACHMENT = 'upload_attachment';
     public const DESCRIPTION_DELETE_ATTACHMENT = 'delete_attachment';

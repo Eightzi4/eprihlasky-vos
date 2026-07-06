@@ -21,6 +21,17 @@
     });
     window.addEventListener('file-uploaded', () => {
         hasMessage = false;
+    });
+    $watch('bringInPerson', val => {
+        if (val) {
+            const clear = () => {
+                const el = document.querySelector('[name=\"maturita_file\"]')?.closest('[x-data]');
+                if (el) { const d = Alpine.$data(el); d.uploadedFiles = []; d.syncValidationState?.(); }
+            };
+            window.addEventListener('autosave-ok', function h(e) {
+                if (e.detail?.field === 'bring_maturita_in_person') { clear(); window.removeEventListener('autosave-ok', h); }
+            });
+        }
     });">
 
         <div x-data="stepValidator({
@@ -146,7 +157,7 @@
                         Nahrání maturitního vysvědčení není v tomto případě povinné.
                     </p>
 
-                    <div x-show="!bringInPerson || {{ $maturitaFile ? 'true' : 'false' }}" x-transition
+                    <div x-show="!bringInPerson" x-transition
                         style="display: none;">
                         <x-file-uploader field-name="maturita_file" :saved-files="$maturitaFile ? [$maturitaFile] : []" :locked="$isLocked" :required="true"
                             required-message="Notářsky ověřené maturitní vysvědčení je povinné."

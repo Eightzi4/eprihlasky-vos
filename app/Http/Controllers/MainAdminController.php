@@ -43,13 +43,86 @@ class MainAdminController extends Controller
     {
         AuditLogger::log($request, AuditActionType::VIEW, null, AuditLog::DESCRIPTION_VIEW_AUDIT_LOG);
 
-        $logs = AuditLog::query()
-            ->with(['admin', 'actionType', 'application'])
-            ->orderByDesc('created_at')
-            ->paginate(20)
-            ->withQueryString();
+        $query = AuditLog::query()->with(['admin', 'actionType', 'application']);
+
+        if ($search = $request->input('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('ip_address', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhereHas('admin', fn($a) => $a->where('name', 'like', "%{$search}%")->orWhere('email', 'like', "%{$search}%"))
+                    ->orWhereHas('application', fn($a) => $a->where('evidence_number', 'like', "%{$search}%")->orWhere('first_name', 'like', "%{$search}%")->orWhere('last_name', 'like', "%{$search}%"));
+            });
+        }
+
+        $logs = $query->orderByDesc('created_at')->paginate(20)->withQueryString();
 
         return view('admin.audit-logs', compact('logs'));
+    }
+
+    public function exportAuditLogs(Request $request): \Illuminate\Http\Response
+    {
+        AuditLogger::log($request, AuditActionType::EXPORT, null, AuditLog::DESCRIPTION_EXPORT_AUDIT_LOG);
+
+        $query = AuditLog::query()->with(['admin', 'actionType', 'application']);
+
+        if ($search = $request->input('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('ip_address', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhereHas('admin', fn($a) => $a->where('name', 'like', "%{$search}%")->orWhere('email', 'like', "%{$search}%"))
+                    ->orWhereHas('application', fn($a) => $a->where('evidence_number', 'like', "%{$search}%")->orWhere('first_name', 'like', "%{$search}%")->orWhere('last_name', 'like', "%{$search}%"));
+            });
+        }
+
+        $logs = $query->orderByDesc('created_at')->get();
+
+        $descriptionLabels = [
+            AuditLog::DESCRIPTION_VIEW_APPLICATION => 'Zobrazení detailu přihlášky',
+            AuditLog::DESCRIPTION_VIEW_AUDIT_LOG => 'Zobrazení auditního logu',
+            AuditLog::DESCRIPTION_UPDATE_EVIDENCE_NUMBER => 'Úprava evidenčního čísla',
+            AuditLog::DESCRIPTION_EXPORT_APPLICATION_CSV => 'Export přihlášky do CSV',
+            AuditLog::DESCRIPTION_EXPORT_APPLICATION_PDF => 'Export přihlášky do PDF',
+            AuditLog::DESCRIPTION_EXPORT_APPLICATION_ZIP => 'Export přihlášky do ZIP',
+            AuditLog::DESCRIPTION_BULK_EXPORT_CSV => 'Hromadný export CSV',
+            AuditLog::DESCRIPTION_BULK_EXPORT_PDF => 'Hromadný export PDF',
+            AuditLog::DESCRIPTION_BULK_EXPORT_ZIP => 'Hromadný export ZIP',
+            AuditLog::DESCRIPTION_EXPORT_AUDIT_LOG => 'Export auditního logu',
+            AuditLog::DESCRIPTION_DOWNLOAD_ATTACHMENT => 'Stažení přílohy',
+            AuditLog::DESCRIPTION_UPLOAD_ATTACHMENT => 'Nahrání přílohy',
+            AuditLog::DESCRIPTION_DELETE_ATTACHMENT => 'Smazání přílohy',
+            AuditLog::DESCRIPTION_ACCEPT_EDUCATION => 'Uznání vzdělání',
+            AuditLog::DESCRIPTION_REVERT_EDUCATION => 'Zrušení uznání vzdělání',
+            AuditLog::DESCRIPTION_ACCEPT_PAYMENT => 'Potvrzení platby',
+            AuditLog::DESCRIPTION_REVERT_PAYMENT => 'Zrušení potvrzení platby',
+            AuditLog::DESCRIPTION_MOVE_TO_FURTHER_ROUND => 'Přesun do dalšího kola',
+        ];
+
+        $csv = '';
+        $handle = fopen('php://temp', 'r+');
+        fwrite($handle, chr(0xEF) . chr(0xBB) . chr(0xBF));
+        fputcsv($handle, ['Datum a čas', 'Administrátor', 'E-mail', 'Akce', 'Událost', 'Přihláška', 'Uchazeč', 'IP adresa'], ';');
+
+        foreach ($logs as $log) {
+            fputcsv($handle, [
+                $log->created_at?->format('j. n. Y H:i:s') ?? '—',
+                $log->admin?->name ?? '—',
+                $log->admin?->email ?? '—',
+                $log->actionType?->label ?? '—',
+                $descriptionLabels[$log->description] ?? ($log->description ?: '—'),
+                $log->application ? ($log->application->evidence_number ?: $log->application->application_number ?: '#' . $log->application->id) : '—',
+                $log->application ? trim(($log->application->first_name ?? '') . ' ' . ($log->application->last_name ?? '')) : '—',
+                $log->ip_address ?? '—',
+            ], ';');
+        }
+
+        rewind($handle);
+        $csv = stream_get_contents($handle);
+        fclose($handle);
+
+        return response($csv, 200, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="audit-log-' . now()->format('Y-m-d-Hi') . '.csv"',
+        ]);
     }
 
     public function updateSettings(Request $request): RedirectResponse

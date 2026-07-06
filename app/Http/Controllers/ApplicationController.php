@@ -231,6 +231,15 @@ class ApplicationController extends Controller
         }
 
         $application->update([$field => $value]);
+
+        if ($field === 'bring_maturita_in_person' && $value) {
+            $maturitaAttachment = $application->attachments()->where('type', 'maturita')->first();
+            if ($maturitaAttachment) {
+                Storage::disk('public')->delete($maturitaAttachment->disk_path);
+                $maturitaAttachment->delete();
+            }
+        }
+
         $application->evaluateStates();
 
         return response()->json(['ok' => true]);
@@ -259,6 +268,10 @@ class ApplicationController extends Controller
 
         if (in_array($type, ['maturita', 'half_year_report'], true) && $application->prev_study_info_accepted) {
             return response()->json(['message' => 'Sekce vzdělání už byla uznána školou a nelze ji měnit.'], 403);
+        }
+
+        if ($type === 'maturita' && $application->bring_maturita_in_person) {
+            return response()->json(['message' => 'Nejprve odškrtněte možnost „Přinesu do školy osobně".'], 403);
         }
 
         if ($type === 'payment' && $application->payment_accepted) {

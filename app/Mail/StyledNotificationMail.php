@@ -33,6 +33,7 @@ class StyledNotificationMail extends Mailable
     {
         return new Content(
             view: 'emails.notification',
+            text: 'emails.notification-text',
         );
     }
 }

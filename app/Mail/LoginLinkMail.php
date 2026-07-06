@@ -33,6 +33,7 @@ class LoginLinkMail extends Mailable
     {
         return new Content(
             view: 'emails.login_link',
+            text: 'emails.login_link-text',
         );
     }
 }

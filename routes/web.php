@@ -125,6 +125,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::get('/settings', [MainAdminController::class, 'settings'])->name('settings');
             Route::patch('/settings', [MainAdminController::class, 'updateSettings'])->name('settings.update');
             Route::get('/audit-logs', [MainAdminController::class, 'auditLogs'])->name('audit-logs');
+            Route::get('/audit-logs/export', [MainAdminController::class, 'exportAuditLogs'])->name('audit-logs.export');
 
             Route::post('/programs', [MainAdminController::class, 'storeProgram'])->name('programs.store');
             Route::patch('/programs/{studyProgram}', [MainAdminController::class, 'updateProgram'])->name('programs.update');

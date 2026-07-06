@@ -3,8 +3,7 @@
 @section('title', 'Přihlášky | Administrace OAUH')
 
 @section('content')
-    <div class="bg-white/80 backdrop-blur-xl shadow-sm rounded-3xl overflow-hidden border border-white/60 ring-1 ring-black/5"
-        x-data="adminTable({
+    <div x-data="adminTable({
             applications: {{ Js::from($applicationsData) }},
             programs: {{ Js::from($programs) }},
             rounds: {{ Js::from($rounds) }},
@@ -18,7 +17,9 @@
         $watch('selectedProgram', () => { currentPage = 1; selectedRound = ''; });
         $watch('selectedRound', () => currentPage = 1)">
 
-        <div class="px-8 pt-8 pb-6 border-b border-gray-100/80 bg-white/40">
+        <div class="bg-white/80 backdrop-blur-xl shadow-sm rounded-3xl overflow-hidden border border-white/60 ring-1 ring-black/5">
+
+            <div class="px-8 pt-8 pb-6 border-b border-gray-100/80 bg-white/40">
             <h1 class="text-2xl font-bold text-gray-900 mb-0.5">Přihlášky</h1>
             <p class="text-gray-400 text-sm">Správa a kontrola podaných elektronických přihlášek.</p>
         </div>
@@ -293,6 +294,8 @@
             </div>
         </div>
 
+    </div>
+
     <div id="bulk-zip-modal" class="fixed inset-0 z-50 hidden">
         <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm" onclick="closeModal('bulk-zip-modal')"></div>
         <div class="relative min-h-screen flex items-center justify-center p-4">
@@ -331,6 +334,7 @@
             </div>
         </div>
     </div>
+
     </div>
 
     <script>
