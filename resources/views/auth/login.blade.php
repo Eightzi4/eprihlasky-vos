@@ -20,8 +20,17 @@
             </p>
         </div>
 
+
+
         <form action="{{ route('auth.email') }}" method="POST" class="space-y-6 text-left">
             @csrf
+
+            <div style="position: absolute; left: -9999px;" aria-hidden="true">
+                <label for="website">Website</label>
+                <input type="text" name="website" id="website" tabindex="-1" autocomplete="off">
+            </div>
+
+            <input type="hidden" name="timestamp" value="{{ now()->timestamp }}">
 
             <div>
                 <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">

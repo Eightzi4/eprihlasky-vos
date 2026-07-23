@@ -47,7 +47,7 @@
                 <span class="text-sm font-bold text-gray-500 hidden sm:block">Administrace</span>
             </a>
 
-            <nav class="flex items-center gap-1 flex-grow">
+            <nav class="flex items-center gap-1 flex-grow overflow-x-auto -mx-1 px-1">
                 @php $admin = Auth::guard('admin')->user(); @endphp
 
                 @php
@@ -73,7 +73,7 @@
                     @endphp
                     @if (Route::has($item['route']))
                         <a href="{{ route($item['route']) }}"
-                            class="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-bold transition-all duration-200
+                            class="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-bold transition-all duration-200 flex-shrink-0
                                 {{ $isActive ? 'bg-red-50 text-school-primary' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900' }}">
                             <span class="material-symbols-rounded text-[18px]">{{ $item['icon'] }}</span>
                             <span class="hidden md:inline">{{ $item['label'] }}</span>

@@ -505,7 +505,7 @@ class AdminController extends Controller
     public function exportApplicationCsv($id): StreamedResponse
     {
         $application = $this->loadApplicationForExport($id);
-        $filename = 'prihlaska-' . ($application->evidence_number ?: $application->application_number ?: $application->id) . '.csv';
+        $filename = $this->exportBaseName($application) . '.csv';
         $columns = $this->csvColumns($application);
 
         AuditLogger::log(request(), AuditActionType::EXPORT, $application, AuditLog::DESCRIPTION_EXPORT_APPLICATION_CSV);
@@ -537,7 +537,7 @@ class AdminController extends Controller
         $paymentFile  = $application->attachments->where('type', 'payment')->first();
         $otherFiles   = $application->attachments->where('type', 'other');
 
-        $filename = 'prihlaska-' . ($application->evidence_number ?: $application->application_number ?: $application->id) . '.pdf';
+        $filename = $this->exportBaseName($application) . '.pdf';
         $pdfContent = $this->renderPdf('admin.applications.pdf', [
             'application'  => $application,
             'maturitaFile' => $maturitaFile,
@@ -554,7 +554,7 @@ class AdminController extends Controller
     public function exportApplicationZip(Request $request, $id): Response
     {
         $application = $this->loadApplicationForExport($id);
-        $baseName = $application->evidence_number ?: $application->application_number ?: $application->id;
+        $baseName = $this->exportBaseName($application);
 
         AuditLogger::log($request, AuditActionType::EXPORT, $application, AuditLog::DESCRIPTION_EXPORT_APPLICATION_ZIP);
 
@@ -631,25 +631,32 @@ class AdminController extends Controller
         return response()->download($zipPath, "{$baseName}.zip")->deleteFileAfterSend();
     }
 
-    public function bulkExportCsv(Request $request): Response
+    public function bulkExportCsv(Request $request): StreamedResponse
     {
         $ids = $this->validateBulkIds($request);
         $applications = Application::with(['user', 'studyProgram', 'round'])->whereIn('id', $ids)->get();
 
-        return $this->bulkZip($applications, function ($app, $zip, $dir) {
-            AuditLogger::log(request(), AuditActionType::EXPORT, $app, AuditLog::DESCRIPTION_BULK_EXPORT_CSV);
-            $columns = $this->csvColumns($app);
-            $csv = '';
-            $handle = fopen('php://temp', 'r+');
+        AuditLogger::log(request(), AuditActionType::EXPORT, null, AuditLog::DESCRIPTION_BULK_EXPORT_CSV);
+
+        $filename = 'export-' . $applications->count() . '-prihlasek.csv';
+
+        return response()->streamDownload(function () use ($applications) {
+            $handle = fopen('php://output', 'w');
             fwrite($handle, chr(0xEF) . chr(0xBB) . chr(0xBF));
-            fputcsv($handle, array_keys($columns), ';');
-            fputcsv($handle, array_values($columns), ';');
-            rewind($handle);
-            $csv = stream_get_contents($handle);
+
+            $headerWritten = false;
+            foreach ($applications as $app) {
+                $columns = $this->csvColumns($app);
+                if (! $headerWritten) {
+                    fputcsv($handle, array_keys($columns), ';');
+                    $headerWritten = true;
+                }
+                fputcsv($handle, array_values($columns), ';');
+            }
             fclose($handle);
-            $name = $app->evidence_number ?: $app->application_number ?: $app->id;
-            $zip->addFromString("{$dir}/{$name}.csv", $csv);
-        }, 'csv');
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
     }
 
     public function bulkExportPdf(Request $request): Response
@@ -1092,6 +1099,14 @@ class AdminController extends Controller
             ->where('completion_deadline_at', '>', $application->round->completion_deadline_at)
             ->orderBy('opens_at')
             ->get();
+    }
+
+    private function exportBaseName(Application $application): string
+    {
+        $identifier = $application->evidence_number ?: $application->application_number ?: $application->id;
+        $nameParts = array_filter([$application->last_name, $application->first_name]);
+        $nameSlug = ! empty($nameParts) ? '-' . implode('_', $nameParts) : '';
+        return 'prihlaska-' . $identifier . $nameSlug;
     }
 
     private function loadApplicationForExport($id): Application

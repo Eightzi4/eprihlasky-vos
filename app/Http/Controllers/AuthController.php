@@ -20,7 +20,13 @@ class AuthController extends Controller
 
     public function handleEmail(Request $request)
     {
-        $request->validate(['email' => 'required|email']);
+        if ($this->isSpam($request)) {
+            return view('auth.check-email', ['email' => $request->input('email')]);
+        }
+
+        $request->validate([
+            'email' => ['required', 'email'],
+        ]);
         $email = $request->input('email');
 
         $user = User::where('email', $email)->first();
@@ -63,6 +69,10 @@ class AuthController extends Controller
 
     public function sendLink(Request $request)
     {
+        if ($this->isSpam($request)) {
+            return view('auth.check-email', ['email' => $request->input('email')]);
+        }
+
         $request->validate(['email' => 'required|email']);
         $user = User::where('email', $request->email)->firstOrFail();
 
@@ -72,6 +82,11 @@ class AuthController extends Controller
 
     public function loginWithPassword(Request $request)
     {
+        if ($this->isSpam($request)) {
+            return view('auth.password-login', ['email' => $request->input('email')])
+                ->withErrors(['password' => 'Zadané heslo není správné.']);
+        }
+
         $request->validate([
             'email'    => 'required|email',
             'password' => 'required',
@@ -116,5 +131,28 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
         return redirect('/');
+    }
+
+    private function isSpam(Request $request): bool
+    {
+        if ($request->filled('website')) {
+            Log::warning('Spam detected: honeypot field filled', [
+                'email' => $request->input('email'),
+                'ip'    => $request->ip(),
+            ]);
+            return true;
+        }
+
+        $timestamp = (int) $request->input('timestamp');
+        if ($timestamp && (now()->timestamp - $timestamp) < 2) {
+            Log::warning('Spam detected: form submitted too fast', [
+                'email'     => $request->input('email'),
+                'ip'        => $request->ip(),
+                'elapsed_s' => now()->timestamp - $timestamp,
+            ]);
+            return true;
+        }
+
+        return false;
     }
 }
